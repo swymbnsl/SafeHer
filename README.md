@@ -1,50 +1,112 @@
-# Welcome to your Expo app 👋
+# 🌟 SafeHer - Travel SafeHer Together
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+<div align="center">
+  <p><em>Empowering women to explore, connect, and travel safely together.</em></p>
 
-## Get started
+ ### Tech Stack
+![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Expo](https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+![NativeWind](https://img.shields.io/badge/NativeWind-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Mapbox](https://img.shields.io/badge/Mapbox-000000?style=for-the-badge&logo=mapbox&logoColor=white)
+![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)
+</div>
 
-1. Install dependencies
+## 🎯 The Problem We're Solving
 
-   ```bash
-   npm install
-   ```
+Many women and college girls avoid solo travel and miss out on opportunities due to valid safety concerns:
+- Fear of harassment, assault, or discomfort in public spaces
+- Hesitation to attend events, explore new places, or commute alone
+- Limited independence and personal growth due to safety worries
 
-2. Start the app
+## ✨ How SafeHer Helps
 
-   ```bash
-    npx expo start
-   ```
+SafeHer is a women-only mobile app designed to connect female users with verified travel companions nearby. Our mission is to make every journey safe and enjoyable.
 
-In the output, you'll find options to open the app in a
+### 🛡️ Core Features
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- **Verified Female-Only Community**
+  - Strict verification process for all users
+  - Women-exclusive platform for enhanced safety
+  - Build a network of trusted companions
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- **Smart Companion Matching**
+  - Find verified travel partners nearby
+  - Connect with like-minded women
+  - Schedule trips in advance
+  - Anonymous companion rating system
 
-## Get a fresh project
+- **Advanced Safety Features**
+  - Emergency HELP button with Women Helpline integration
+  - Real-time location sharing with trusted contacts
+  - SafetyShare: Share outing details with friends/family
+  - Trip status updates and check-ins
 
-When you're ready, run:
+### 🎨 Key Solutions
 
-```bash
-npm run reset-project
-```
+- **Scheduled Trips**
+  - Plan and schedule trips in advance
+  - No last-minute partner searching
+  - Organized travel planning
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- **Verified Users**
+  - Strict verification process
+  - Female-only user base
+  - Enhanced safety and trust
 
-## Learn more
+- **Companion Rating**
+  - Anonymous feedback system
+  - Build reliable user profiles
+  - Community-driven trust
 
-To learn more about developing your project with Expo, look at the following resources:
+- **Emergency Support**
+  - One-tap emergency help
+  - Instant Women Helpline connection
+  - Quick response system
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- **Smart Matching**
+  - Connect with like-minded travelers
+  - Verified companion suggestions
+  - Interest-based matching
 
-## Join the community
+- **SafetyShare**
+  - Live location sharing
+  - Real-time trip updates
+  - Connected with trusted contacts
 
-Join our community of developers creating universal apps.
+## 💡 Why Choose SafeHer?
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+1. **Exclusive Community**: Built by women, for women
+2. **Verified Users**: Every user is thoroughly verified
+3. **Real-time Safety**: Constant connection with emergency services
+4. **Smart Matching**: Find compatible travel companions
+5. **Privacy First**: Your safety and privacy are our priority
+
+## 🌈 Impact Goals
+
+- Increase women's mobility and independence
+- Create a supportive community of women
+- Reduce travel-related anxiety
+- Enable more opportunities for growth
+- Make every journey safe and enjoyable
+
+## 🚀 Coming Soon
+
+- AI-powered safety route suggestions
+- Community safety alerts
+- Enhanced verification methods
+- Group trip planning
+- Safety score for locations
+
+---
+
+<div align="center">
+  <p>Made with 💜 for women</p>
+  <p><em>Because every woman deserves to travel without fear</em></p>
+  
+  ### Created By
+  [Arun Kukrety](https://github.com/arunk-03) • [Swayam Bansal](https://github.com/swymbnsl)
+</div>
