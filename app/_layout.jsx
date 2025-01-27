@@ -5,7 +5,8 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import "@/styles/global.css";
-import { Colours } from "@/constants/colours";
+import { Colors } from "@/constants/colours";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -33,16 +34,42 @@ export default function RootLayout() {
   }
 
   return (
-    <>
-      <Stack screenOptions={{ headerShown: false }}>
+    <SafeAreaProvider>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: "slide_from_right",
+          animationDuration: 200,
+          gestureEnabled: true,
+          gestureDirection: "horizontal",
+          presentation: "card",
+        }}
+      >
         <Stack.Screen name="index" />
-        <Stack.Screen name="(tabs)/home" />
-        <Stack.Screen name="(tabs)/profile" />
-        <Stack.Screen name="(auth)/sign-in" />
-        <Stack.Screen name="(auth)/sign-up" />
+        <Stack.Screen 
+          name="(tabs)" 
+          options={{
+            animation: "fade",
+            animationDuration: 200,
+          }}
+        />
+        <Stack.Screen 
+          name="(auth)/sign-in"
+          options={{
+            animation: "slide_from_bottom",
+            animationDuration: 200,
+          }}
+        />
+        <Stack.Screen 
+          name="(auth)/sign-up"
+          options={{
+            animation: "slide_from_bottom",
+            animationDuration: 200,
+          }}
+        />
         <Stack.Screen name="+not-found" />
       </Stack>
-      {/* <StatusBar style="light" backgroundColor={Colours.backgroundColor} /> */}
-    </>
+      <StatusBar style="dark" backgroundColor={Colors.primary} />
+    </SafeAreaProvider>
   );
 }

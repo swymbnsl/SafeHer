@@ -32,6 +32,13 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app needs access to your photos to let you choose a profile picture.",
+          "cameraPermission": "The app needs access to your camera to let you take profile pictures."
+        }
       ]
     ],
     "experiments": {
