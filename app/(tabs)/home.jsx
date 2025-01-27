@@ -161,5 +161,5 @@ const RequestCard = ({ name, request }) => (
     </View>
   </View>
 );
-
 export default Home;
+

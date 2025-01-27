@@ -35,39 +35,13 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          animation: "slide_from_right",
-          animationDuration: 200,
-          gestureEnabled: true,
-          gestureDirection: "horizontal",
-          presentation: "card",
-        }}
-      >
+      <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
+        <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
         <Stack.Screen 
           name="(tabs)" 
-          options={{
-            animation: "fade",
-            animationDuration: 200,
-          }}
+          options={{ animation: 'fade' }} 
         />
-        <Stack.Screen 
-          name="(auth)/sign-in"
-          options={{
-            animation: "slide_from_bottom",
-            animationDuration: 200,
-          }}
-        />
-        <Stack.Screen 
-          name="(auth)/sign-up"
-          options={{
-            animation: "slide_from_bottom",
-            animationDuration: 200,
-          }}
-        />
-        <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="dark" backgroundColor={Colors.primary} />
     </SafeAreaProvider>

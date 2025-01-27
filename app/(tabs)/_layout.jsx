@@ -64,7 +64,7 @@ export default function TabLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color }) => (
-            <Ionicons name="home-outline" size={22} color={color} />
+            <Ionicons name="home" size={24} color={color} />
           ),
         }}
       />
@@ -101,13 +101,13 @@ export default function TabLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color }) => (
-            <Ionicons name="person-outline" size={22} color={color} />
+            <Ionicons name="person" size={24} color={color} />
           ),
         }}
       />
      
 
-      {/* Hidden screens */}
+      Hidden screens
       <Tabs.Screen
         name="edit_profile"
         options={{
