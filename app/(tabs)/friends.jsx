@@ -7,6 +7,7 @@ import {
   TextInput,
   Image,
   Modal,
+  SafeAreaView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -14,55 +15,91 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import Toast from "@/components/Toast";
 
-const FriendCard = ({ friend, onViewProfile, onRemove, onMessage }) => (
-  <TouchableOpacity
-    className="flex-row items-center bg-white p-4 rounded-2xl mb-4 shadow-sm border border-[#f0e6ff]"
-    onPress={() => onViewProfile(friend)}
-  >
-    <Image source={{ uri: friend.avatar }} className="w-12 h-12 rounded-full" />
-    <View className="flex-1 ml-4">
-      <Text className="text-[#4a3b6b] font-pbold text-lg">{friend.name}</Text>
-      <Text className="text-[#6f5c91] font-pmedium">
-        {friend.mutualFriends} mutual friends
-      </Text>
-    </View>
-    <TouchableOpacity className="mr-7 " onPress={() => onMessage(friend)}>
-      <Ionicons name="chatbubble" size={24} color="#9f86ff" />
+const FriendCard = ({ friend, onViewProfile, onRemove, onMessage }) => {
+  console.log("Rendering friend:", friend);
+  return (
+    <TouchableOpacity
+      className="bg-white p-4 rounded-2xl mb-4"
+      style={{
+        shadowColor: "#7C3AED",
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 4 },
+        elevation: 4,
+      }}
+      onPress={() => onViewProfile(friend)}
+    >
+      <View className="flex-row items-center justify-between">
+        <View className="flex-row items-center flex-1">
+          <Image
+            source={{ uri: friend.avatar }}
+            className="w-12 h-12 rounded-full"
+          />
+          <View className="ml-3 flex-1">
+            <Text className="text-gray-800 font-psemibold text-base">
+              {friend.name}
+            </Text>
+            <Text className="text-gray-500 font-plight">
+              {friend.mutualFriends} mutual friends
+            </Text>
+          </View>
+        </View>
+        <View className="flex-row items-center">
+          <TouchableOpacity
+            className="mr-4 bg-violet-100 p-2 rounded-xl"
+            onPress={() => onMessage(friend)}
+          >
+            <Ionicons name="chatbubble" size={20} color="#7C3AED" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="bg-red-100 p-2 rounded-xl"
+            onPress={() => onRemove(friend)}
+          >
+            <Ionicons name="person-remove" size={20} color="#EF4444" />
+          </TouchableOpacity>
+        </View>
+      </View>
     </TouchableOpacity>
-    <TouchableOpacity onPress={() => onRemove(friend)}>
-      <Ionicons name="person-remove-outline" size={24} color="#ff8686" />
-    </TouchableOpacity>
-  </TouchableOpacity>
-);
+  );
+};
 
 const FriendRequestCard = ({ request, onAccept, onDecline }) => (
-  <View className="bg-white p-4 rounded-2xl mb-4 shadow-sm border border-[#f0e6ff]">
-    <View className="flex-row items-center">
+  <View
+    className="bg-white p-4 rounded-2xl mb-4"
+    style={{
+      shadowColor: "#7C3AED",
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 4 },
+      elevation: 4,
+    }}
+  >
+    <View className="flex-row items-center mb-4">
       <Image
         source={{ uri: request.avatar }}
         className="w-12 h-12 rounded-full"
       />
-      <View className="flex-1 ml-4">
-        <Text className="text-[#4a3b6b] font-pbold text-lg">
+      <View className="ml-3">
+        <Text className="text-gray-800 font-psemibold text-base">
           {request.name}
         </Text>
-        <Text className="text-[#6f5c91] font-pmedium">
+        <Text className="text-gray-500 font-plight">
           {request.mutualFriends} mutual friends
         </Text>
       </View>
     </View>
-    <View className="flex-row mt-4">
+    <View className="flex-row">
       <TouchableOpacity
-        className="flex-1 bg-[#9f86ff] py-2 rounded-xl m-2"
+        className="flex-1 bg-violet-600 py-2.5 rounded-xl mr-2"
         onPress={() => onAccept(request)}
       >
-        <Text className="text-white font-pbold text-center">Accept</Text>
+        <Text className="text-white font-pmedium text-center">Accept</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        className="flex-1 border-2 border-[#ff8686] py-2 rounded-xl m-2"
+        className="flex-1 py-2.5 rounded-xl border border-red-500"
         onPress={() => onDecline(request)}
       >
-        <Text className="text-[#ff8686] font-pbold text-center">Decline</Text>
+        <Text className="text-red-500 font-pmedium text-center">Decline</Text>
       </TouchableOpacity>
     </View>
   </View>
@@ -295,174 +332,178 @@ const Friends = () => {
   };
 
   return (
-    <View className="flex-1 bg-[#fff4ff]">
-      <View className="px-6 pt-14 pb-4">
-        <Text className="text-2xl font-pbold text-[#4a3b6b]">Friends</Text>
-      </View>
+    <SafeAreaView className="flex-1 bg-gray-50">
+      <View className="px-6 pt-2 pb-4 bg-white">
+        <View className="flex-row items-center justify-between">
+          <Text className="text-2xl font-pbold text-gray-900">Friends</Text>
+          <TouchableOpacity className="relative">
+            <View className="w-10 h-10 bg-gray-50 rounded-full items-center justify-center">
+              <Ionicons name="person-add" size={22} color="#7C3AED" />
+            </View>
+          </TouchableOpacity>
+        </View>
 
-      <View className="px-6">
-        <View className="flex-row items-center bg-white rounded-xl p-3 mb-6 shadow-md border border-[#f0e6ff]">
-          <Ionicons name="search" size={20} color="#9f86ff" />
+        <View className="mt-4 flex-row items-center bg-gray-50 rounded-xl p-3">
+          <Ionicons name="search" size={20} color="#6B7280" />
           <TextInput
-            className="flex-1 ml-3 text-[#4a3b6b] font-pmedium"
+            className="flex-1 ml-3 text-gray-700 font-pmedium"
             placeholder="Search friends"
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholderTextColor="#6f5c91"
+            placeholderTextColor="#9CA3AF"
           />
-        </View>
-
-        <View className="flex-row mb-6">
-          <TouchableOpacity
-            className={`flex-1 py-2 rounded-xl mr-2 ${
-              activeTab === "friends"
-                ? "bg-[#9f86ff]"
-                : "bg-white border border-[#9f86ff]"
-            }`}
-            onPress={() => setActiveTab("friends")}
-          >
-            <Text
-              className={`font-pbold text-center ${
-                activeTab === "friends" ? "text-white" : "text-[#9f86ff]"
-              }`}
-            >
-              My Friends
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className={`flex-1 py-2 rounded-xl ml-2 ${
-              activeTab === "requests"
-                ? "bg-[#9f86ff]"
-                : "bg-white border border-[#9f86ff]"
-            }`}
-            onPress={() => setActiveTab("requests")}
-          >
-            <Text
-              className={`font-pbold text-center ${
-                activeTab === "requests" ? "text-white" : "text-[#9f86ff]"
-              }`}
-            >
-              Requests{" "}
-              {friendRequests.length > 0 && `(${friendRequests.length})`}
-            </Text>
-          </TouchableOpacity>
         </View>
       </View>
 
-      <ScrollView className="flex-1 px-6">
-        {activeTab === "friends"
-          ? friends.map((friend) => (
-              <FriendCard
-                key={friend.id}
-                friend={friend}
-                onViewProfile={handleViewProfile}
-                onRemove={handleRemoveFriend}
-                onMessage={handleMessage}
-              />
-            ))
-          : friendRequests.map((request) => (
-              <FriendRequestCard
-                key={request.id}
-                request={request}
-                onAccept={handleAcceptRequest}
-                onDecline={handleDeclineRequest}
-              />
-            ))}
-        <View className="h-20" />
-      </ScrollView>
-
-      <ProfileModal
-        visible={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-        profile={selectedProfile}
-      />
-
-      <RemoveConfirmationModal
-        visible={showRemoveModal}
-        onClose={() => setShowRemoveModal(false)}
-        onConfirm={confirmRemoveFriend}
-        friendName={selectedFriend?.name}
-      />
-
-      {showAcceptModal && (
-        <Modal transparent animationType="fade">
-          <View className="flex-1 bg-black/50 justify-center items-center p-6">
-            <View className="bg-white rounded-2xl p-6 w-full">
-              <Text className="text-lg font-pbold text-[#4a3b6b] mb-4 text-center">
-                Accept Friend Request
+      <View className="flex-1">
+        <View className="px-6 py-4">
+          <View className="flex-row mb-4">
+            <TouchableOpacity
+              className={`flex-1 py-2.5 rounded-xl mr-2 ${
+                activeTab === "friends"
+                  ? "bg-violet-600"
+                  : "bg-white border border-violet-600"
+              }`}
+              onPress={() => setActiveTab("friends")}
+            >
+              <Text
+                className={`font-pmedium text-center ${
+                  activeTab === "friends" ? "text-white" : "text-violet-600"
+                }`}
+              >
+                My Friends
               </Text>
-              <Text className="text-[#6f5c91] font-pmedium mb-6 text-center">
-                Do you want to accept friend request from{" "}
-                {selectedRequest?.name}?
+            </TouchableOpacity>
+            <TouchableOpacity
+              className={`flex-1 py-2.5 rounded-xl ml-2 ${
+                activeTab === "requests"
+                  ? "bg-violet-600"
+                  : "bg-white border border-violet-600"
+              }`}
+              onPress={() => setActiveTab("requests")}
+            >
+              <Text
+                className={`font-pmedium text-center ${
+                  activeTab === "requests" ? "text-white" : "text-violet-600"
+                }`}
+              >
+                Requests{" "}
+                {friendRequests.length > 0 && `(${friendRequests.length})`}
               </Text>
-              <View className="flex-row space-x-4">
-                <TouchableOpacity
-                  className="flex-1 bg-[#9f86ff] rounded-xl py-3 m-3"
-                  onPress={confirmAcceptRequest}
-                >
-                  <Text className="text-white font-pbold text-center">
-                    Accept
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  className="flex-1 bg-gray-200 rounded-xl py-3 m-3"
-                  onPress={() => setShowAcceptModal(false)}
-                >
-                  <Text className="text-[#4a3b6b] font-pbold text-center">
-                    Cancel
-                  </Text>
-                </TouchableOpacity>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+          <View className="px-6">
+            {activeTab === "friends"
+              ? friends.map((friend) => (
+                  <FriendCard
+                    key={friend.id}
+                    friend={friend}
+                    onViewProfile={handleViewProfile}
+                    onRemove={handleRemoveFriend}
+                    onMessage={handleMessage}
+                  />
+                ))
+              : friendRequests.map((request) => (
+                  <FriendRequestCard
+                    key={request.id}
+                    request={request}
+                    onAccept={handleAcceptRequest}
+                    onDecline={handleDeclineRequest}
+                  />
+                ))}
+          </View>
+          <View className="h-20" />
+        </ScrollView>
+
+        <ProfileModal
+          visible={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          profile={selectedProfile}
+        />
+
+        <RemoveConfirmationModal
+          visible={showRemoveModal}
+          onClose={() => setShowRemoveModal(false)}
+          onConfirm={confirmRemoveFriend}
+          friendName={selectedFriend?.name}
+        />
+
+        {showAcceptModal && (
+          <Modal transparent animationType="fade">
+            <View className="flex-1 bg-black/50 justify-center items-center p-6">
+              <View className="bg-white rounded-2xl p-6 w-full">
+                <Text className="text-lg font-pbold text-[#4a3b6b] mb-4 text-center">
+                  Accept Friend Request
+                </Text>
+                <Text className="text-[#6f5c91] font-pmedium mb-6 text-center">
+                  Do you want to accept friend request from{" "}
+                  {selectedRequest?.name}?
+                </Text>
+                <View className="flex-row space-x-4">
+                  <TouchableOpacity
+                    className="flex-1 bg-[#9f86ff] rounded-xl py-3 m-3"
+                    onPress={confirmAcceptRequest}
+                  >
+                    <Text className="text-white font-pbold text-center">
+                      Accept
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="flex-1 bg-gray-200 rounded-xl py-3 m-3"
+                    onPress={() => setShowAcceptModal(false)}
+                  >
+                    <Text className="text-[#4a3b6b] font-pbold text-center">
+                      Cancel
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
-        </Modal>
-      )}
+          </Modal>
+        )}
 
-      {showDeclineModal && (
-        <Modal transparent animationType="fade">
-          <View className="flex-1 bg-black/50 justify-center items-center p-6">
-            <View className="bg-white rounded-2xl p-6 w-full">
-              <Text className="text-lg font-pbold text-[#4a3b6b] mb-4 text-center">
-                Decline Friend Request
-              </Text>
-              <Text className="text-[#6f5c91] font-pmedium mb-6 text-center">
-                Are you sure you want to decline friend request from{" "}
-                {selectedRequest?.name}?
-              </Text>
-              <View className="flex-row space-x-4">
-                <TouchableOpacity
-                  className="flex-1 bg-red-500 rounded-xl py-3 m-3"
-                  onPress={confirmDeclineRequest}
-                >
-                  <Text className="text-white font-pbold text-center">
-                    Decline
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  className="flex-1 bg-gray-200 rounded-xl py-3 m-3"
-                  onPress={() => setShowDeclineModal(false)}
-                >
-                  <Text className="text-[#4a3b6b] font-pbold text-center">
-                    Cancel
-                  </Text>
-                </TouchableOpacity>
+        {showDeclineModal && (
+          <Modal transparent animationType="fade">
+            <View className="flex-1 bg-black/50 justify-center items-center p-6">
+              <View className="bg-white rounded-2xl p-6 w-full">
+                <Text className="text-lg font-pbold text-[#4a3b6b] mb-4 text-center">
+                  Decline Friend Request
+                </Text>
+                <Text className="text-[#6f5c91] font-pmedium mb-6 text-center">
+                  Are you sure you want to decline friend request from{" "}
+                  {selectedRequest?.name}?
+                </Text>
+                <View className="flex-row space-x-4">
+                  <TouchableOpacity
+                    className="flex-1 bg-red-500 rounded-xl py-3 m-3"
+                    onPress={confirmDeclineRequest}
+                  >
+                    <Text className="text-white font-pbold text-center">
+                      Decline
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="flex-1 bg-gray-200 rounded-xl py-3 m-3"
+                    onPress={() => setShowDeclineModal(false)}
+                  >
+                    <Text className="text-[#4a3b6b] font-pbold text-center">
+                      Cancel
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
-        </Modal>
-      )}
+          </Modal>
+        )}
 
-      <TouchableOpacity
-        className="absolute bottom-6 right-6 bg-[#9f86ff] w-14 h-14 rounded-full items-center justify-center shadow-lg"
-        style={{ elevation: 4 }}
-      >
-        <Ionicons name="person-add" size={24} color="white" />
-      </TouchableOpacity>
-
-      {showToast && (
-        <Toast message={toastMessage} onHide={() => setShowToast(false)} />
-      )}
-    </View>
+        {showToast && (
+          <Toast message={toastMessage} onHide={() => setShowToast(false)} />
+        )}
+      </View>
+    </SafeAreaView>
   );
 };
 

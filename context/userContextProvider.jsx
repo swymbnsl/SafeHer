@@ -36,6 +36,7 @@ export const UserProvider = ({ children }) => {
     }
   };
   useEffect(() => {
+    console.log(4);
     fetchUser();
   }, []);
 

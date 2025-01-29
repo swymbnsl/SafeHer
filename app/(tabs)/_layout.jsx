@@ -12,10 +12,6 @@ export default function TabLayout() {
   const { user, isLoading, fetchUser } = useUserContext();
 
   useEffect(() => {
-    fetchUser();
-  }, []);
-
-  useEffect(() => {
     if (!isLoading && !user) {
       router.replace("/");
     }

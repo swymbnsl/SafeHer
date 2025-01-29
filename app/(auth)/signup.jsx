@@ -49,6 +49,7 @@ export default function SignUp() {
 
       const res = await emailSignUp(inputs.email, inputs.password, inputs.name);
       console.log("User created successfully", res);
+      console.log(2);
       await fetchUser();
       // showSuccessToast(
       //   "Account created successfully",
@@ -187,6 +188,8 @@ export default function SignUp() {
                 onPress={handleSignUp}
                 className="mt-2"
                 textClassName="text-white"
+                isLoading={isLoading}
+                disabled={isDisabledSignupButton || isLoading}
               />
             </View>
 

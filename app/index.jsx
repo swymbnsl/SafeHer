@@ -9,6 +9,7 @@ const IntroScreen = () => {
   const { user, isLoading, fetchUser } = useUserContext();
 
   useEffect(() => {
+    console.log(1);
     fetchUser();
   }, []);
 

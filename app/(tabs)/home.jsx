@@ -18,7 +18,7 @@ const Home = () => {
     <SafeAreaView className="flex-1 bg-gray-50">
       {/* Header */}
       <View className="px-6 pt-2 pb-4 bg-white">
-        <View className="flex-row items-center justify-between mb-6">
+        <View className="flex-row items-center justify-between">
           <View className="flex-row items-center">
             <View className="w-10 h-10 rounded-full bg-violet-100 mr-3">
               {/* Profile Image Placeholder */}
@@ -47,14 +47,6 @@ const Home = () => {
         </View>
 
         {/* Search Bar */}
-        <View className="flex-row items-center bg-gray-50 rounded-xl p-3">
-          <Ionicons name="search-outline" size={20} color="#9CA3AF" />
-          <TextInput
-            className="flex-1 ml-2 font-pregular text-gray-600"
-            placeholder="Search trips or companions"
-            placeholderTextColor="#9CA3AF"
-          />
-        </View>
       </View>
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -110,7 +102,11 @@ const Home = () => {
               <Ionicons name="chevron-forward" size={16} color="#7C3AED" />
             </TouchableOpacity>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="mb-6"
+          >
             <ActiveTripCard
               name="Qutub Minar"
               time="Today, 4:00 PM"
@@ -125,7 +121,7 @@ const Home = () => {
         </View>
 
         {/* Recent Requests */}
-        <View className="mt-6 px-6 pb-6">
+        <View className="px-6 pb-6">
           <Text className="text-lg font-psemibold text-gray-800 mb-4">
             Recent Requests
           </Text>
@@ -142,6 +138,9 @@ const Home = () => {
             status="accepted"
           />
         </View>
+
+        {/* Add bottom padding */}
+        <View className="h-20" />
       </ScrollView>
     </SafeAreaView>
   );
