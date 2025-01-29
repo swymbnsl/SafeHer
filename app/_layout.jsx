@@ -7,6 +7,7 @@ import "react-native-reanimated";
 import "@/styles/global.css";
 import { Colors } from "@/constants/colours";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { UserProvider } from "@/context/userContextProvider";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -34,16 +35,15 @@ export default function RootLayout() {
   }
 
   return (
-    <SafeAreaProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
-        <Stack.Screen 
-          name="(tabs)" 
-          options={{ animation: 'fade' }} 
-        />
-      </Stack>
-      <StatusBar style="dark" backgroundColor={Colors.primary} />
-    </SafeAreaProvider>
+    <UserProvider>
+      <SafeAreaProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(auth)" options={{ animation: "fade" }} />
+          <Stack.Screen name="(tabs)" options={{ animation: "fade" }} />
+        </Stack>
+        <StatusBar style="dark" backgroundColor={Colors.primary} />
+      </SafeAreaProvider>
+    </UserProvider>
   );
 }

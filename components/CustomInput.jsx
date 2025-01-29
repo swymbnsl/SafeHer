@@ -20,9 +20,7 @@ const CustomInput = ({
       </Text>
       <View className="flex-row items-center bg-gray-50 rounded-xl border border-gray-200">
         <TextInput
-          className={`flex-1 py-3.5 font-pregular ${
-            secureTextEntry ? "pl-4" : "px-4"
-          }`}
+          className={`flex-1 py-3.5 font-pregular px-4`}
           placeholder={placeholder}
           value={value}
           onChangeText={onChangeText}

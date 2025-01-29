@@ -1,33 +1,35 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Image, Modal } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
-import Toast from '../components/Toast';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Image,
+  Modal,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
+import { useRouter } from "expo-router";
+import Toast from "@/components/Toast";
 
 const FriendCard = ({ friend, onViewProfile, onRemove, onMessage }) => (
-  <TouchableOpacity 
+  <TouchableOpacity
     className="flex-row items-center bg-white p-4 rounded-2xl mb-4 shadow-sm border border-[#f0e6ff]"
     onPress={() => onViewProfile(friend)}
   >
-    <Image
-      source={{ uri: friend.avatar }}
-      className="w-12 h-12 rounded-full"
-    />
+    <Image source={{ uri: friend.avatar }} className="w-12 h-12 rounded-full" />
     <View className="flex-1 ml-4">
       <Text className="text-[#4a3b6b] font-pbold text-lg">{friend.name}</Text>
-      <Text className="text-[#6f5c91] font-pmedium">{friend.mutualFriends} mutual friends</Text>
+      <Text className="text-[#6f5c91] font-pmedium">
+        {friend.mutualFriends} mutual friends
+      </Text>
     </View>
-    <TouchableOpacity 
-      className="mr-7 "
-      onPress={() => onMessage(friend)}
-    >
+    <TouchableOpacity className="mr-7 " onPress={() => onMessage(friend)}>
       <Ionicons name="chatbubble" size={24} color="#9f86ff" />
     </TouchableOpacity>
-    <TouchableOpacity 
-      onPress={() => onRemove(friend)}
-    >
+    <TouchableOpacity onPress={() => onRemove(friend)}>
       <Ionicons name="person-remove-outline" size={24} color="#ff8686" />
     </TouchableOpacity>
   </TouchableOpacity>
@@ -41,18 +43,22 @@ const FriendRequestCard = ({ request, onAccept, onDecline }) => (
         className="w-12 h-12 rounded-full"
       />
       <View className="flex-1 ml-4">
-        <Text className="text-[#4a3b6b] font-pbold text-lg">{request.name}</Text>
-        <Text className="text-[#6f5c91] font-pmedium">{request.mutualFriends} mutual friends</Text>
+        <Text className="text-[#4a3b6b] font-pbold text-lg">
+          {request.name}
+        </Text>
+        <Text className="text-[#6f5c91] font-pmedium">
+          {request.mutualFriends} mutual friends
+        </Text>
       </View>
     </View>
     <View className="flex-row mt-4">
-      <TouchableOpacity 
+      <TouchableOpacity
         className="flex-1 bg-[#9f86ff] py-2 rounded-xl m-2"
         onPress={() => onAccept(request)}
       >
         <Text className="text-white font-pbold text-center">Accept</Text>
       </TouchableOpacity>
-      <TouchableOpacity 
+      <TouchableOpacity
         className="flex-1 border-2 border-[#ff8686] py-2 rounded-xl m-2"
         onPress={() => onDecline(request)}
       >
@@ -63,11 +69,7 @@ const FriendRequestCard = ({ request, onAccept, onDecline }) => (
 );
 
 const ProfileModal = ({ visible, onClose, profile }) => (
-  <Modal
-    transparent={true}
-    visible={visible}
-    animationType="slide"
-  >
+  <Modal transparent={true} visible={visible} animationType="slide">
     <View className="flex-1 bg-black/50 justify-end">
       <View className="bg-white rounded-t-3xl p-6 h-[80%]">
         <View className="flex-row justify-between items-center mb-6">
@@ -84,22 +86,30 @@ const ProfileModal = ({ visible, onClose, profile }) => (
                 source={{ uri: profile.avatar }}
                 className="w-24 h-24 rounded-full mb-4"
               />
-              <Text className="text-xl font-pbold text-[#4a3b6b]">{profile.name}</Text>
+              <Text className="text-xl font-pbold text-[#4a3b6b]">
+                {profile.name}
+              </Text>
               <Text className="text-[#6f5c91] font-pmedium">{profile.bio}</Text>
             </View>
 
             <View className="flex-row justify-around mb-6">
               <View className="items-center">
-                <Text className="text-2xl font-pbold text-[#4a3b6b]">{profile.friends || 0}</Text>
+                <Text className="text-2xl font-pbold text-[#4a3b6b]">
+                  {profile.friends || 0}
+                </Text>
                 <Text className="text-[#6f5c91] font-pmedium">Friends</Text>
               </View>
               <View className="items-center">
-                <Text className="text-2xl font-pbold text-[#4a3b6b]">{profile.trips || 0}</Text>
+                <Text className="text-2xl font-pbold text-[#4a3b6b]">
+                  {profile.trips || 0}
+                </Text>
                 <Text className="text-[#6f5c91] font-pmedium">Trips</Text>
               </View>
             </View>
 
-            <Text className="text-lg font-pbold text-[#4a3b6b] mb-4">Recent Trips</Text>
+            <Text className="text-lg font-pbold text-[#4a3b6b] mb-4">
+              Recent Trips
+            </Text>
             {profile.recentTrips?.map((trip, index) => (
               <View key={index} className="bg-[#fff4ff] p-4 rounded-xl mb-4">
                 <Text className="text-[#4a3b6b] font-pbold">{trip.name}</Text>
@@ -113,12 +123,13 @@ const ProfileModal = ({ visible, onClose, profile }) => (
   </Modal>
 );
 
-const RemoveConfirmationModal = ({ visible, onClose, onConfirm, friendName }) => (
-  <Modal
-    transparent={true}
-    visible={visible}
-    animationType="fade"
-  >
+const RemoveConfirmationModal = ({
+  visible,
+  onClose,
+  onConfirm,
+  friendName,
+}) => (
+  <Modal transparent={true} visible={visible} animationType="fade">
     <View className="flex-1 bg-black/50 justify-center items-center px-6">
       <View className="bg-white rounded-2xl p-6 w-full">
         <Text className="text-lg font-pbold text-[#4a3b6b] mb-4 text-center">
@@ -128,13 +139,13 @@ const RemoveConfirmationModal = ({ visible, onClose, onConfirm, friendName }) =>
           Are you sure you want to remove {friendName} from your friends list?
         </Text>
         <View className="flex-row space-x-4">
-          <TouchableOpacity 
+          <TouchableOpacity
             className="flex-1 bg-[#ff8686] rounded-xl py-3 m-3"
             onPress={onConfirm}
           >
             <Text className="text-white font-pbold text-center">Remove</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             className="flex-1 bg-[#9f86ff] rounded-xl py-3 m-3"
             onPress={onClose}
           >
@@ -147,14 +158,14 @@ const RemoveConfirmationModal = ({ visible, onClose, onConfirm, friendName }) =>
 );
 
 const Friends = () => {
-  const [activeTab, setActiveTab] = useState('friends');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState("friends");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
+  const [toastMessage, setToastMessage] = useState("");
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -163,66 +174,66 @@ const Friends = () => {
   // Mock data - replace with real data from your backend
   const [friends, setFriends] = useState([
     {
-      id: '1',
-      name: 'Priya Sharma',
-      avatar: 'https://randomuser.me/api/portraits/women/1.jpg',
+      id: "1",
+      name: "Priya Sharma",
+      avatar: "https://randomuser.me/api/portraits/women/1.jpg",
       mutualFriends: 8,
-      bio: 'Travel enthusiast | Food lover | Delhi NCR',
+      bio: "Travel enthusiast | Food lover | Delhi NCR",
       friends: 156,
       trips: 27,
       recentTrips: [
-        { name: 'Jaipur Heritage Walk', date: '3 days ago' },
-        { name: 'Agra Food Tour', date: '1 week ago' },
-        { name: 'Delhi Street Photography', date: '2 weeks ago' }
-      ]
+        { name: "Jaipur Heritage Walk", date: "3 days ago" },
+        { name: "Agra Food Tour", date: "1 week ago" },
+        { name: "Delhi Street Photography", date: "2 weeks ago" },
+      ],
     },
     {
-      id: '2',
-      name: 'Rahul Verma',
-      avatar: 'https://randomuser.me/api/portraits/men/2.jpg',
+      id: "2",
+      name: "Rahul Verma",
+      avatar: "https://randomuser.me/api/portraits/men/2.jpg",
       mutualFriends: 12,
-      bio: 'Adventure seeker | Photographer | Mumbai',
+      bio: "Adventure seeker | Photographer | Mumbai",
       friends: 203,
       trips: 45,
       recentTrips: [
-        { name: 'Marine Drive Sunset', date: '1 day ago' },
-        { name: 'Lonavala Trek', date: '5 days ago' }
-      ]
+        { name: "Marine Drive Sunset", date: "1 day ago" },
+        { name: "Lonavala Trek", date: "5 days ago" },
+      ],
     },
     {
-      id: '3',
-      name: 'Anjali Gupta',
-      avatar: 'https://randomuser.me/api/portraits/women/3.jpg',
+      id: "3",
+      name: "Anjali Gupta",
+      avatar: "https://randomuser.me/api/portraits/women/3.jpg",
       mutualFriends: 6,
-      bio: 'Culture explorer | Foodie | Bangalore',
+      bio: "Culture explorer | Foodie | Bangalore",
       friends: 178,
       trips: 32,
       recentTrips: [
-        { name: 'Mysore Palace Visit', date: '2 days ago' },
-        { name: 'Coorg Weekend', date: '2 weeks ago' }
-      ]
-    }
+        { name: "Mysore Palace Visit", date: "2 days ago" },
+        { name: "Coorg Weekend", date: "2 weeks ago" },
+      ],
+    },
   ]);
 
   const [friendRequests, setFriendRequests] = useState([
     {
-      id: '4',
-      name: 'Arjun Mehta',
-      avatar: 'https://randomuser.me/api/portraits/men/4.jpg',
-      mutualFriends: 15
+      id: "4",
+      name: "Arjun Mehta",
+      avatar: "https://randomuser.me/api/portraits/men/4.jpg",
+      mutualFriends: 15,
     },
     {
-      id: '5',
-      name: 'Neha Patel',
-      avatar: 'https://randomuser.me/api/portraits/women/5.jpg',
-      mutualFriends: 7
+      id: "5",
+      name: "Neha Patel",
+      avatar: "https://randomuser.me/api/portraits/women/5.jpg",
+      mutualFriends: 7,
     },
     {
-      id: '6',
-      name: 'Vikram Singh',
-      avatar: 'https://randomuser.me/api/portraits/men/6.jpg',
-      mutualFriends: 9
-    }
+      id: "6",
+      name: "Vikram Singh",
+      avatar: "https://randomuser.me/api/portraits/men/6.jpg",
+      mutualFriends: 9,
+    },
   ]);
 
   const handleViewProfile = (friend) => {
@@ -236,8 +247,10 @@ const Friends = () => {
   };
 
   const confirmAcceptRequest = () => {
-    setFriendRequests(prev => prev.filter(req => req.id !== selectedRequest.id));
-    setFriends(prev => [...prev, selectedRequest]);
+    setFriendRequests((prev) =>
+      prev.filter((req) => req.id !== selectedRequest.id)
+    );
+    setFriends((prev) => [...prev, selectedRequest]);
     setShowAcceptModal(false);
     setToastMessage(`You are now friends with ${selectedRequest.name}`);
     setShowToast(true);
@@ -250,7 +263,9 @@ const Friends = () => {
   };
 
   const confirmDeclineRequest = () => {
-    setFriendRequests(prev => prev.filter(req => req.id !== selectedRequest.id));
+    setFriendRequests((prev) =>
+      prev.filter((req) => req.id !== selectedRequest.id)
+    );
     setShowDeclineModal(false);
     setToastMessage(`Friend request from ${selectedRequest.name} declined`);
     setShowToast(true);
@@ -263,17 +278,19 @@ const Friends = () => {
   };
 
   const confirmRemoveFriend = () => {
-    setFriends(prev => prev.filter(f => f.id !== selectedFriend.id));
+    setFriends((prev) => prev.filter((f) => f.id !== selectedFriend.id));
     setShowRemoveModal(false);
     setSelectedFriend(null);
-    setToastMessage(`${selectedFriend.name} has been removed from your friends`);
+    setToastMessage(
+      `${selectedFriend.name} has been removed from your friends`
+    );
     setShowToast(true);
   };
 
   const handleMessage = (friend) => {
     router.push({
       pathname: "/(tabs)/chat",
-      params: { name: friend.name }
+      params: { name: friend.name },
     });
   };
 
@@ -297,45 +314,60 @@ const Friends = () => {
 
         <View className="flex-row mb-6">
           <TouchableOpacity
-            className={`flex-1 py-2 rounded-xl mr-2 ${activeTab === 'friends' ? 'bg-[#9f86ff]' : 'bg-white border border-[#9f86ff]'}`}
-            onPress={() => setActiveTab('friends')}
+            className={`flex-1 py-2 rounded-xl mr-2 ${
+              activeTab === "friends"
+                ? "bg-[#9f86ff]"
+                : "bg-white border border-[#9f86ff]"
+            }`}
+            onPress={() => setActiveTab("friends")}
           >
-            <Text className={`font-pbold text-center ${activeTab === 'friends' ? 'text-white' : 'text-[#9f86ff]'}`}>
+            <Text
+              className={`font-pbold text-center ${
+                activeTab === "friends" ? "text-white" : "text-[#9f86ff]"
+              }`}
+            >
               My Friends
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            className={`flex-1 py-2 rounded-xl ml-2 ${activeTab === 'requests' ? 'bg-[#9f86ff]' : 'bg-white border border-[#9f86ff]'}`}
-            onPress={() => setActiveTab('requests')}
+            className={`flex-1 py-2 rounded-xl ml-2 ${
+              activeTab === "requests"
+                ? "bg-[#9f86ff]"
+                : "bg-white border border-[#9f86ff]"
+            }`}
+            onPress={() => setActiveTab("requests")}
           >
-            <Text className={`font-pbold text-center ${activeTab === 'requests' ? 'text-white' : 'text-[#9f86ff]'}`}>
-              Requests {friendRequests.length > 0 && `(${friendRequests.length})`}
+            <Text
+              className={`font-pbold text-center ${
+                activeTab === "requests" ? "text-white" : "text-[#9f86ff]"
+              }`}
+            >
+              Requests{" "}
+              {friendRequests.length > 0 && `(${friendRequests.length})`}
             </Text>
           </TouchableOpacity>
         </View>
       </View>
 
       <ScrollView className="flex-1 px-6">
-        {activeTab === 'friends' ? (
-          friends.map(friend => (
-            <FriendCard
-              key={friend.id}
-              friend={friend}
-              onViewProfile={handleViewProfile}
-              onRemove={handleRemoveFriend}
-              onMessage={handleMessage}
-            />
-          ))
-        ) : (
-          friendRequests.map(request => (
-            <FriendRequestCard
-              key={request.id}
-              request={request}
-              onAccept={handleAcceptRequest}
-              onDecline={handleDeclineRequest}
-            />
-          ))
-        )}
+        {activeTab === "friends"
+          ? friends.map((friend) => (
+              <FriendCard
+                key={friend.id}
+                friend={friend}
+                onViewProfile={handleViewProfile}
+                onRemove={handleRemoveFriend}
+                onMessage={handleMessage}
+              />
+            ))
+          : friendRequests.map((request) => (
+              <FriendRequestCard
+                key={request.id}
+                request={request}
+                onAccept={handleAcceptRequest}
+                onDecline={handleDeclineRequest}
+              />
+            ))}
         <View className="h-20" />
       </ScrollView>
 
@@ -360,20 +392,25 @@ const Friends = () => {
                 Accept Friend Request
               </Text>
               <Text className="text-[#6f5c91] font-pmedium mb-6 text-center">
-                Do you want to accept friend request from {selectedRequest?.name}?
+                Do you want to accept friend request from{" "}
+                {selectedRequest?.name}?
               </Text>
               <View className="flex-row space-x-4">
-                <TouchableOpacity 
+                <TouchableOpacity
                   className="flex-1 bg-[#9f86ff] rounded-xl py-3 m-3"
                   onPress={confirmAcceptRequest}
                 >
-                  <Text className="text-white font-pbold text-center">Accept</Text>
+                  <Text className="text-white font-pbold text-center">
+                    Accept
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                   className="flex-1 bg-gray-200 rounded-xl py-3 m-3"
                   onPress={() => setShowAcceptModal(false)}
                 >
-                  <Text className="text-[#4a3b6b] font-pbold text-center">Cancel</Text>
+                  <Text className="text-[#4a3b6b] font-pbold text-center">
+                    Cancel
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -389,20 +426,25 @@ const Friends = () => {
                 Decline Friend Request
               </Text>
               <Text className="text-[#6f5c91] font-pmedium mb-6 text-center">
-                Are you sure you want to decline friend request from {selectedRequest?.name}?
+                Are you sure you want to decline friend request from{" "}
+                {selectedRequest?.name}?
               </Text>
               <View className="flex-row space-x-4">
-                <TouchableOpacity 
+                <TouchableOpacity
                   className="flex-1 bg-red-500 rounded-xl py-3 m-3"
                   onPress={confirmDeclineRequest}
                 >
-                  <Text className="text-white font-pbold text-center">Decline</Text>
+                  <Text className="text-white font-pbold text-center">
+                    Decline
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                   className="flex-1 bg-gray-200 rounded-xl py-3 m-3"
                   onPress={() => setShowDeclineModal(false)}
                 >
-                  <Text className="text-[#4a3b6b] font-pbold text-center">Cancel</Text>
+                  <Text className="text-[#4a3b6b] font-pbold text-center">
+                    Cancel
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -410,7 +452,7 @@ const Friends = () => {
         </Modal>
       )}
 
-      <TouchableOpacity 
+      <TouchableOpacity
         className="absolute bottom-6 right-6 bg-[#9f86ff] w-14 h-14 rounded-full items-center justify-center shadow-lg"
         style={{ elevation: 4 }}
       >
@@ -418,13 +460,10 @@ const Friends = () => {
       </TouchableOpacity>
 
       {showToast && (
-        <Toast 
-          message={toastMessage} 
-          onHide={() => setShowToast(false)} 
-        />
+        <Toast message={toastMessage} onHide={() => setShowToast(false)} />
       )}
     </View>
   );
 };
 
-export default Friends; 
+export default Friends;

@@ -2,10 +2,24 @@ import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Platform, TouchableOpacity } from "react-native";
 import { Animated } from "react-native";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
+import { useRouter } from "expo-router";
+import { useUserContext } from "@/context/userContextProvider";
 
 export default function TabLayout() {
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  const router = useRouter();
+  const { user, isLoading, fetchUser } = useUserContext();
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.replace("/");
+    }
+  }, [isLoading, user]);
 
   const fadeIn = () => {
     Animated.sequence([
@@ -22,36 +36,45 @@ export default function TabLayout() {
     ]).start();
   };
 
+  if (isLoading || !user) {
+    return null;
+  }
+
   return (
     <Tabs
       screenOptions={{
         tabBarStyle: {
-          height: 65,
-          backgroundColor: 'white',
-          borderTopWidth: 1,
-          borderTopColor: '#f0e6ff',
-          paddingBottom: 10,
-          paddingTop: 10,
+          height: 70,
+          backgroundColor: "white",
+          borderTopWidth: 0,
+          elevation: 20,
+          shadowColor: "#7C3AED",
+          shadowOpacity: 0.1,
+          shadowRadius: 15,
+          shadowOffset: {
+            width: 0,
+            height: -3,
+          },
+          paddingBottom: Platform.OS === "ios" ? 20 : 12,
+          paddingTop: 12,
         },
         tabBarItemStyle: {
-          height: '100%',
-          alignItems: 'center',
-          justifyContent: 'center',
+          height: "100%",
+          paddingTop: 0,
         },
         tabBarIconStyle: {
           marginBottom: 4,
         },
         tabBarShowLabel: true,
-        tabBarActiveTintColor: '#9f86ff',
-        tabBarInactiveTintColor: '#6f5c91',
+        tabBarActiveTintColor: "#7C3AED",
+        tabBarInactiveTintColor: "#9CA3AF",
         tabBarLabelStyle: {
-          fontFamily: 'Poppins-Medium',
+          fontFamily: "Poppins-Medium",
           fontSize: 12,
+          marginTop: -4,
         },
         headerShown: false,
         tabBarHideOnKeyboard: true,
-        animation: "fade",
-        animationDuration: 200,
       }}
       screenListeners={{
         tabPress: () => {
@@ -63,8 +86,12 @@ export default function TabLayout() {
         name="home"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="home" size={24} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "home" : "home-outline"}
+              size={24}
+              color={color}
+            />
           ),
         }}
       />
@@ -72,27 +99,38 @@ export default function TabLayout() {
         name="trips"
         options={{
           title: "Trips",
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="map-outline" size={22} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "map" : "map-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
-      
       <Tabs.Screen
         name="friends"
         options={{
           title: "Friends",
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="people-outline" size={22} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "people" : "people-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
-       <Tabs.Screen
+      <Tabs.Screen
         name="chats"
         options={{
           title: "Chats",
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="chatbubble-outline" size={22} color={color} /> // Updated icon
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "chatbubble" : "chatbubble-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -100,14 +138,17 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="person" size={24} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "person" : "person-outline"}
+              size={24}
+              color={color}
+            />
           ),
         }}
       />
-     
 
-      Hidden screens
+      {/* Hidden screens */}
       <Tabs.Screen
         name="edit_profile"
         options={{
@@ -126,7 +167,12 @@ export default function TabLayout() {
           href: null,
         }}
       />
-      
+      <Tabs.Screen
+        name="chat"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,39 +12,99 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CustomButton from "../../components/CustomButton";
+import { useUserContext } from "@/context/userContextProvider";
 import CustomInput from "../../components/CustomInput";
+import {
+  emailSignUp,
+  getLoggedInUser,
+  getUserFromDB,
+  supabase,
+} from "@/lib/supabase";
 
 export default function SignUp() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
+  const [inputs, setInputs] = useState({
     name: "",
     email: "",
     password: "",
-    confirmPassword: "",
   });
-  const [error, setError] = useState("");
+  const [errorText, setErrorText] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDisabledSignupButton, setIsDisabledSignupButton] = useState(true);
+
+  const { fetchUser, isLoading: isLoadingUser, user } = useUserContext();
 
   const handleSignUp = async () => {
-    if (
-      !formData.name ||
-      !formData.email ||
-      !formData.password ||
-      !formData.confirmPassword
-    ) {
-      setError("Please fill in all fields");
-      return;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
     try {
-      await AsyncStorage.setItem("userToken", "dummy-token");
-      router.replace("/(tabs)");
+      setErrorText({
+        name: "",
+        email: "",
+        password: "",
+      });
+      setIsLoading(true);
+
+      const res = await emailSignUp(inputs.email, inputs.password, inputs.name);
+      console.log("User created successfully", res);
+      await fetchUser();
+      // showSuccessToast(
+      //   "Account created successfully",
+      //   "Redirecting to home..."
+      // );
+      // router.replace("/home");
     } catch (error) {
-      setError("Sign up failed. Please try again.");
+      // if (error.cause) {
+      //   // const errorMessage = getCustomErrorMessage(
+      //   //   error.cause.code,
+      //   //   error.cause.type,
+      //   //   error.cause.message
+      //   // );
+      //   const errorMessage = error.cause.message;
+      //   showErrorToast("Error Creating Account", errorMessage);
+      //   console.log(error.cause);
+      // } else if (error instanceof ZodError) {
+      //   setErrorText((prev) => {
+      //     return {
+      //       ...prev,
+      //       [error.issues[0].path[0]]: error.issues[0].message,
+      //     };
+      //   });
+      // } else {
+      //   showErrorToast(
+      //     "Error Creating Account",
+      //     "See console for more details"
+      //   );
+      console.log(error.cause);
+      // }
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    if (!isLoadingUser && user) {
+      router.replace("/home");
+    }
+  }, [isLoadingUser, user]);
+
+  useEffect(() => {
+    if (
+      inputs.name.length > 0 &&
+      inputs.email.length > 0 &&
+      inputs.password.length > 0
+    ) {
+      setIsDisabledSignupButton(false);
+    } else {
+      setIsDisabledSignupButton(true);
+    }
+  }, [inputs]);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -86,37 +146,27 @@ export default function SignUp() {
             contentContainerStyle={{ paddingTop: 260 }}
           >
             <View className="bg-white rounded-3xl -mt-10 p-6 shadow-lg shadow-black/5">
-              {error ? (
-                <Text className="text-red-500 mb-4 font-pmedium text-center">
-                  {error}
-                </Text>
-              ) : null}
-
               <CustomInput
                 additionalStyle="mt-8"
                 label="Full Name"
-                value={formData.name}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, name: text })
-                }
+                value={inputs.name}
+                onChangeText={(text) => setInputs({ ...inputs, name: text })}
                 placeholder="Enter your full name"
               />
 
               <CustomInput
                 label="Email Address"
-                value={formData.email}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, email: text })
-                }
+                value={inputs.email}
+                onChangeText={(text) => setInputs({ ...inputs, email: text })}
                 placeholder="Enter your email"
                 keyboardType="email-address"
               />
 
               <CustomInput
                 label="Password"
-                value={formData.password}
+                value={inputs.password}
                 onChangeText={(text) =>
-                  setFormData({ ...formData, password: text })
+                  setInputs({ ...inputs, password: text })
                 }
                 placeholder="Create a password"
                 secureTextEntry
@@ -124,9 +174,9 @@ export default function SignUp() {
 
               <CustomInput
                 label="Confirm Password"
-                value={formData.confirmPassword}
+                value={inputs.confirmPassword}
                 onChangeText={(text) =>
-                  setFormData({ ...formData, confirmPassword: text })
+                  setInputs({ ...inputs, confirmPassword: text })
                 }
                 placeholder="Confirm your password"
                 secureTextEntry
@@ -136,6 +186,7 @@ export default function SignUp() {
                 title="Sign Up"
                 onPress={handleSignUp}
                 className="mt-2"
+                textClassName="text-white"
               />
             </View>
 

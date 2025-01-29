@@ -1,165 +1,252 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Image } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/constants/colours';
-import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 const Home = () => {
   const router = useRouter();
-  const [showNotifications, setShowNotifications] = useState(false);
   const [hasUnread, setHasUnread] = useState(true);
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      message: "Rahul accepted your friend request",
-      time: "2 hours ago",
-      read: false
-    },
-    {
-      id: 2,
-      message: "New trip request from Priya",
-      time: "5 hours ago",
-      read: false
-    },
-    {
-      id: 3,
-      message: "Your trip was successfully posted",
-      time: "1 day ago",
-      read: true
-    }
-  ]);
-
-  const toggleNotifications = () => {
-    setShowNotifications(!showNotifications);
-    if (hasUnread) {
-      setHasUnread(false);
-      markAllAsRead();
-    }
-  };
-
-  const markAllAsRead = async () => {
-    const updatedNotifications = notifications.map(notif => ({
-      ...notif,
-      read: true
-    }));
-    setNotifications(updatedNotifications);
-    try {
-      await AsyncStorage.setItem('notifications', JSON.stringify(updatedNotifications));
-    } catch (error) {
-      console.log('Error saving notifications:', error);
-    }
-  };
 
   return (
-    <View className="flex-1 bg-[#fff4ff]">
-      {/* Branding Header */}
-      <View className="bg-white pt-14 pb-4 rounded-b-3xl shadow-sm">
-        <View className="flex-row justify-between items-center px-6">
-          <View>
-            <Text className="text-3xl font-pbold text-[#9f86ff]">SafeHer</Text>
-            <Text className="text-sm font-pmedium text-[#6f5c91]">Your Safety Companion</Text>
+    <SafeAreaView className="flex-1 bg-gray-50">
+      {/* Header */}
+      <View className="px-6 pt-2 pb-4 bg-white">
+        <View className="flex-row items-center justify-between mb-6">
+          <View className="flex-row items-center">
+            <View className="w-10 h-10 rounded-full bg-violet-100 mr-3">
+              {/* Profile Image Placeholder */}
+            </View>
+            <View>
+              <Text className="text-sm font-pmedium text-gray-500">
+                Welcome back
+              </Text>
+              <Text className="text-lg font-pbold text-gray-900">
+                Sarah Miller
+              </Text>
+            </View>
           </View>
-          <TouchableOpacity 
-            className="bg-[#f0e6ff] p-2 rounded-full"
-            onPress={toggleNotifications}
-          >
-            <Ionicons 
-              name={showNotifications || !hasUnread ? "notifications" : "notifications-outline"} 
-              size={24} 
-              color="#9f86ff" 
-            />
-            {hasUnread && (
-              <View className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
-            )}
+          <TouchableOpacity className="relative">
+            <View className="w-10 h-10 bg-gray-50 rounded-full items-center justify-center">
+              <Ionicons
+                name="notifications-outline"
+                size={22}
+                color="#7C3AED"
+              />
+              {hasUnread && (
+                <View className="absolute top-1 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+              )}
+            </View>
           </TouchableOpacity>
+        </View>
+
+        {/* Search Bar */}
+        <View className="flex-row items-center bg-gray-50 rounded-xl p-3">
+          <Ionicons name="search-outline" size={20} color="#9CA3AF" />
+          <TextInput
+            className="flex-1 ml-2 font-pregular text-gray-600"
+            placeholder="Search trips or companions"
+            placeholderTextColor="#9CA3AF"
+          />
         </View>
       </View>
 
-      <ScrollView className="flex-1 px-6">
-        <View className="flex-row justify-between my-4">
-          <StatsCard number="12" label="Trips" />
-          <StatsCard number="28" label="Friends" />
-          <StatsCard number="4.9" label="Rating" />
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        {/* Featured Section */}
+        <View className="px-6 py-4">
+          <View className="bg-violet-600 p-5 rounded-2xl">
+            <View className="flex-row items-center mb-3">
+              <View className="bg-white/20 p-2 rounded-lg mr-3">
+                <Ionicons name="shield-checkmark" size={24} color="white" />
+              </View>
+              <Text className="text-white font-pbold text-lg">
+                Safety Score
+              </Text>
+            </View>
+            <View className="py-1">
+              <Text className="text-5xl font-pbold text-white leading-[56px]">
+                4.9
+              </Text>
+            </View>
+            <Text className="text-white/80 font-plight mb-4">
+              Based on your last 12 trips
+            </Text>
+            <TouchableOpacity className="bg-white/20 py-2.5 rounded-xl">
+              <Text className="text-white text-center font-pmedium">
+                View Details
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <View className="flex-row items-center bg-white rounded-xl p-3 mb-6 shadow-md border border-[#f0e6ff]">
-          <Ionicons name="search" size={20} color="#9f86ff" />
-          <TextInput
-            className="flex-1 ml-3 text-[#4a3b6b] font-pmedium"
-            placeholder="Search trips or companions"
-            placeholderTextColor="#6f5c91"
+        {/* Quick Actions */}
+        <View className="px-6">
+          <Text className="text-lg font-psemibold text-gray-800 mb-3">
+            Quick Actions
+          </Text>
+          <View className="flex-row justify-between">
+            <QuickActionButton icon="add" label="New Trip" />
+            <QuickActionButton icon="people" label="Find Buddy" />
+            <QuickActionButton icon="map" label="Explore" />
+          </View>
+        </View>
+
+        {/* Active Trips */}
+        <View className="mt-6 px-6">
+          <View className="flex-row justify-between items-center mb-4">
+            <Text className="text-lg font-psemibold text-gray-800">
+              Active Trips
+            </Text>
+            <TouchableOpacity className="flex-row items-center">
+              <Text className="text-violet-600 font-pmedium mr-1">
+                View All
+              </Text>
+              <Ionicons name="chevron-forward" size={16} color="#7C3AED" />
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <ActiveTripCard
+              name="Qutub Minar"
+              time="Today, 4:00 PM"
+              companions={2}
+            />
+            <ActiveTripCard
+              name="Hauz Khas"
+              time="Tomorrow, 6:00 PM"
+              companions={3}
+            />
+          </ScrollView>
+        </View>
+
+        {/* Recent Requests */}
+        <View className="mt-6 px-6 pb-6">
+          <Text className="text-lg font-psemibold text-gray-800 mb-4">
+            Recent Requests
+          </Text>
+          <RequestCard
+            name="Priya Sharma"
+            location="Qutub Minar"
+            time="2h ago"
+            status="pending"
           />
-          <TouchableOpacity className="bg-[#f0e6ff] p-2 rounded-lg">
-            <Ionicons name="filter" size={20} color="#9f86ff" />
-          </TouchableOpacity>
+          <RequestCard
+            name="Anjali Mehta"
+            location="Lodhi Garden"
+            time="5h ago"
+            status="accepted"
+          />
         </View>
-
-        <Text className="text-xl font-pbold text-[#4a3b6b] mb-4">My Posted Trips</Text>
-        <TripCard
-          name="Qutub Minar Evening Visit"
-          date="25th October 2023"
-          time="4:00 PM"
-          companions={2}
-        />
-        <TripCard
-          name="Hauz Khas Village"
-          date="30th October 2023"
-          time="6:00 PM"
-          companions={3}
-        />
-
-        <Text className="text-xl font-pbold text-[#4a3b6b] mb-4 mt-2">Travel Requests</Text>
-        <RequestCard
-          name="Priya Sharma"
-          request="Looking for a companion to visit Qutub Minar this Saturday evening for photography."
-        />
-        <RequestCard
-          name="Anjali Mehta"
-          request="The Lodhi Garden walk sounds great for Sunday!"
-        />
-        <View className="h-20" />
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
-const StatsCard = ({ number, label }) => (
-  <View className="bg-white p-4 rounded-xl shadow-sm border border-[#f0e6ff] w-[30%]">
-    <Text className="text-xl font-pbold text-[#4a3b6b] text-center">{number}</Text>
-    <Text className="text-[#6f5c91] font-pmedium text-center text-sm">{label}</Text>
-  </View>
+const QuickActionButton = ({ icon, label }) => (
+  <TouchableOpacity
+    className="items-center bg-white p-4 rounded-2xl shadow-md flex-1 mx-1"
+    style={{
+      shadowColor: "#7C3AED",
+      shadowOpacity: 0.1,
+      shadowRadius: 10,
+      elevation: 3,
+    }}
+  >
+    <View className="bg-violet-100 p-2.5 rounded-xl mb-2">
+      <Ionicons name={icon} size={22} color="#7C3AED" />
+    </View>
+    <Text className="font-pmedium text-gray-700 text-sm">{label}</Text>
+  </TouchableOpacity>
 );
 
-const TripCard = ({ name, date, time, companions }) => (
-  <View className="bg-white rounded-2xl p-5 mb-4 shadow-lg border border-[#f0e6ff]">
-    <Text className="text-lg font-psemibold text-[#4a3b6b]">{name}</Text>
-    <Text className="text-[#6f5c91] font-pmedium mt-1">{date}, {time}</Text>
-    <Text className="text-[#6f5c91] font-pmedium mt-1">{companions} companions</Text>
-    <View className="flex-row mt-4">
-      <TouchableOpacity className="bg-[#6f5c91] rounded-xl px-5 py-2.5 mr-3">
-        <Text className="text-white font-pmedium">Edit Trip</Text>
+const ActiveTripCard = ({ name, time, companions }) => (
+  <TouchableOpacity
+    className="bg-white p-4 rounded-2xl mr-4"
+    style={{
+      width: 200,
+      shadowColor: "#7C3AED",
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      shadowOffset: {
+        width: 0,
+        height: 4,
+      },
+      elevation: 4,
+    }}
+  >
+    <View className="flex-row items-center mb-3">
+      <View className="w-10 h-10 bg-violet-100 rounded-xl items-center justify-center mr-3">
+        <Ionicons name="location" size={20} color="#7C3AED" />
+      </View>
+      <Text className="text-lg font-psemibold text-gray-800">{name}</Text>
+    </View>
+    <Text className="text-gray-500 font-plight mb-3">{time}</Text>
+    <View className="flex-row items-center">
+      <View className="flex-row items-center">
+        <Ionicons name="people" size={16} color="#6B7280" />
+        <Text className="text-gray-500 font-plight ml-1">{companions}</Text>
+      </View>
+      <View className="flex-1 items-end">
+        <View className="bg-violet-100 p-1.5 rounded-lg">
+          <Ionicons name="chevron-forward" size={16} color="#7C3AED" />
+        </View>
+      </View>
+    </View>
+  </TouchableOpacity>
+);
+
+const RequestCard = ({ name, location, time, status }) => (
+  <View
+    className="bg-white p-4 rounded-2xl mb-3"
+    style={{
+      shadowColor: "#7C3AED",
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      shadowOffset: {
+        width: 0,
+        height: 4,
+      },
+      elevation: 4,
+    }}
+  >
+    <View className="flex-row items-center justify-between mb-3">
+      <View className="flex-row items-center">
+        <View className="w-10 h-10 bg-violet-100 rounded-full mr-3">
+          {/* Profile Image */}
+        </View>
+        <View>
+          <Text className="text-base font-psemibold text-gray-800">{name}</Text>
+          <Text className="text-gray-500 font-plight text-sm">{location}</Text>
+        </View>
+      </View>
+      <Text className="text-gray-400 font-plight text-sm">{time}</Text>
+    </View>
+    <View className="flex-row">
+      <TouchableOpacity
+        className={`flex-1 py-2.5 rounded-xl mr-2 ${
+          status === "pending" ? "bg-violet-600" : "bg-gray-100"
+        }`}
+      >
+        <Text
+          className={`text-center font-pmedium ${
+            status === "pending" ? "text-white" : "text-gray-600"
+          }`}
+        >
+          {status === "pending" ? "Accept" : "Accepted"}
+        </Text>
       </TouchableOpacity>
-      <TouchableOpacity className="border-2 border-[#d4a6ff] rounded-xl px-5 py-2.5">
-        <Text className="text-[#9f86ff] font-pmedium">Cancel</Text>
+      <TouchableOpacity className="flex-1 py-2.5 rounded-xl border border-violet-600">
+        <Text className="text-violet-600 text-center font-pmedium">
+          Message
+        </Text>
       </TouchableOpacity>
     </View>
   </View>
 );
 
-const RequestCard = ({ name, request }) => (
-  <View className="bg-white rounded-2xl p-5 mb-4 shadow-lg border border-[#f0e6ff]">
-    <Text className="text-lg font-psemibold text-[#4a3b6b]">{name}</Text>
-    <Text className="text-[#6f5c91] font-pmedium mt-1">{request}</Text>
-    <View className="flex-row mt-4">
-      <TouchableOpacity className="bg-[#9f86ff] rounded-xl px-5 py-2.5 mr-3">
-        <Text className="text-white font-pmedium">Accept Request</Text>
-      </TouchableOpacity>
-      <TouchableOpacity className="border-2 border-[#9f86ff] rounded-xl px-5 py-2.5">
-        <Text className="text-[#9f86ff] font-pmedium">Message</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-);
 export default Home;
-

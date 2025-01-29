@@ -2,8 +2,22 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import CustomButton from "../components/CustomButton";
+import { useUserContext } from "@/context/userContextProvider";
+import { useEffect } from "react";
 
 const IntroScreen = () => {
+  const { user, isLoading, fetchUser } = useUserContext();
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    if (user && !isLoading) {
+      router.replace("/home");
+    }
+  }, [user, isLoading]);
+
   const handleLoginClick = () => {
     router.push("/login");
   };

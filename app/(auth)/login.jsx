@@ -9,28 +9,79 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import CustomButton from "../../components/CustomButton";
-import CustomInput from "../../components/CustomInput";
+import CustomButton from "@/components/CustomButton";
+import CustomInput from "@/components/CustomInput";
+import { useUserContext } from "@/context/userContextProvider";
 
 const LoginScreen = () => {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [inputs, setInputs] = useState({
+    email: "",
+    password: "",
+  });
+  const [errorText, setErrorText] = useState({
+    email: "",
+    password: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDisabledSigninButton, setIsDisabledSigninButton] = useState(true);
   const [error, setError] = useState("");
+  const { fetchUser, isLoading: isLoadingUser, user } = useUserContext();
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      setError("Please fill in all fields");
-      return;
-    }
     try {
-      await AsyncStorage.setItem("userToken", "dummy-token");
-      router.replace("/(tabs)");
+      setErrorText({
+        email: "",
+        password: "",
+      });
+      setIsLoading(true);
+
+      // await signIn(inputs.email, inputs.password);
+      // await fetchUser();
+      // showSuccessToast("Logged in successfully", "Redirecting to home...");
+      // router.replace("/home");
     } catch (error) {
-      setError("Login failed. Please try again.");
+      // if (error.cause) {
+      //   const errorMessage = getCustomErrorMessage(
+      //     error.cause.code,
+      //     error.cause.type,
+      //     error.cause.message
+      //   );
+      //   showErrorToast("Error Logging in", errorMessage);
+      // } else if (error instanceof ZodError) {
+      //   setErrorText((prev) => {
+      //     return {
+      //       ...prev,
+      //       [error.issues[0].path[0]]: error.issues[0].message,
+      //     };
+      //   });
+      // } else {
+      //   showErrorToast("Error Logging in", "See console for more details");
+      //   console.log(error);
+      // }
+      console.log(error);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isLoadingUser && user) {
+      router.replace("/home");
+    }
+  }, [isLoadingUser, user]);
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    if (inputs.email.length > 0 && inputs.password.length > 0) {
+      setIsDisabledSigninButton(false);
+    } else {
+      setIsDisabledSigninButton(true);
+    }
+  }, [inputs]);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -71,16 +122,20 @@ const LoginScreen = () => {
 
           <CustomInput
             label="Email Address"
-            value={email}
-            onChangeText={setEmail}
+            value={inputs.email}
+            onChangeText={(text) =>
+              setInputs((prev) => ({ ...prev, email: text }))
+            }
             placeholder="Enter your email"
             keyboardType="email-address"
           />
 
           <CustomInput
             label="Password"
-            value={password}
-            onChangeText={setPassword}
+            value={inputs.password}
+            onChangeText={(text) =>
+              setInputs((prev) => ({ ...prev, password: text }))
+            }
             placeholder="Enter your password"
             secureTextEntry
           />
@@ -89,6 +144,9 @@ const LoginScreen = () => {
             title="Sign In"
             onPress={handleLogin}
             className="mt-2"
+            textClassName="text-white"
+            isLoading={isLoading}
+            isDisabled={isDisabledSigninButton}
           />
         </View>
 
