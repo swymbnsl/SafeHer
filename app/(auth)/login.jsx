@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import CustomButton from "@/components/CustomButton";
 import CustomInput from "@/components/CustomInput";
 import { useUserContext } from "@/context/userContextProvider";
+import { emailSignIn } from "@/lib/supabase";
 
 const LoginScreen = () => {
   const router = useRouter();
@@ -36,30 +37,12 @@ const LoginScreen = () => {
       });
       setIsLoading(true);
 
-      // await signIn(inputs.email, inputs.password);
-      // await fetchUser();
-      // showSuccessToast("Logged in successfully", "Redirecting to home...");
-      // router.replace("/home");
+      await emailSignIn(inputs.email, inputs.password);
+      await fetchUser();
+      router.replace("/home");
     } catch (error) {
-      // if (error.cause) {
-      //   const errorMessage = getCustomErrorMessage(
-      //     error.cause.code,
-      //     error.cause.type,
-      //     error.cause.message
-      //   );
-      //   showErrorToast("Error Logging in", errorMessage);
-      // } else if (error instanceof ZodError) {
-      //   setErrorText((prev) => {
-      //     return {
-      //       ...prev,
-      //       [error.issues[0].path[0]]: error.issues[0].message,
-      //     };
-      //   });
-      // } else {
-      //   showErrorToast("Error Logging in", "See console for more details");
-      //   console.log(error);
-      // }
-      console.log(error);
+      console.log(error.cause);
+      setError(error.cause?.message || "An error occurred during login");
     } finally {
       setIsLoading(false);
     }
