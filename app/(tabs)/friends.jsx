@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -14,9 +14,15 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import Toast from "@/components/Toast";
+import {
+  getFriends,
+  getFriendRequests,
+  acceptFriendRequest,
+  declineFriendRequest,
+  removeFriend,
+} from "@/lib/supabase";
 
 const FriendCard = ({ friend, onViewProfile, onRemove, onMessage }) => {
-  console.log("Rendering friend:", friend);
   return (
     <TouchableOpacity
       className="bg-white p-4 rounded-2xl mb-4"
@@ -31,10 +37,18 @@ const FriendCard = ({ friend, onViewProfile, onRemove, onMessage }) => {
     >
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center flex-1">
-          <Image
-            source={{ uri: friend.avatar }}
-            className="w-12 h-12 rounded-full"
-          />
+          {friend.avatar ? (
+            <Image
+              source={{ uri: friend.avatar }}
+              className="w-12 h-12 rounded-full"
+            />
+          ) : (
+            <View className="w-12 h-12 rounded-full bg-violet-200 items-center justify-center">
+              <Text className="text-violet-700 font-pbold text-lg">
+                {friend.name?.charAt(0).toUpperCase()}
+              </Text>
+            </View>
+          )}
           <View className="ml-3 flex-1">
             <Text className="text-gray-800 font-psemibold text-base">
               {friend.name}
@@ -75,10 +89,18 @@ const FriendRequestCard = ({ request, onAccept, onDecline }) => (
     }}
   >
     <View className="flex-row items-center mb-4">
-      <Image
-        source={{ uri: request.avatar }}
-        className="w-12 h-12 rounded-full"
-      />
+      {request.avatar ? (
+        <Image
+          source={{ uri: request.avatar }}
+          className="w-12 h-12 rounded-full"
+        />
+      ) : (
+        <View className="w-12 h-12 rounded-full bg-violet-200 items-center justify-center">
+          <Text className="text-violet-700 font-pbold text-lg">
+            {request.name?.charAt(0).toUpperCase()}
+          </Text>
+        </View>
+      )}
       <View className="ml-3">
         <Text className="text-gray-800 font-psemibold text-base">
           {request.name}
@@ -207,71 +229,34 @@ const Friends = () => {
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Mock data - replace with real data from your backend
-  const [friends, setFriends] = useState([
-    {
-      id: "1",
-      name: "Priya Sharma",
-      avatar: "https://randomuser.me/api/portraits/women/1.jpg",
-      mutualFriends: 8,
-      bio: "Travel enthusiast | Food lover | Delhi NCR",
-      friends: 156,
-      trips: 27,
-      recentTrips: [
-        { name: "Jaipur Heritage Walk", date: "3 days ago" },
-        { name: "Agra Food Tour", date: "1 week ago" },
-        { name: "Delhi Street Photography", date: "2 weeks ago" },
-      ],
-    },
-    {
-      id: "2",
-      name: "Rahul Verma",
-      avatar: "https://randomuser.me/api/portraits/men/2.jpg",
-      mutualFriends: 12,
-      bio: "Adventure seeker | Photographer | Mumbai",
-      friends: 203,
-      trips: 45,
-      recentTrips: [
-        { name: "Marine Drive Sunset", date: "1 day ago" },
-        { name: "Lonavala Trek", date: "5 days ago" },
-      ],
-    },
-    {
-      id: "3",
-      name: "Anjali Gupta",
-      avatar: "https://randomuser.me/api/portraits/women/3.jpg",
-      mutualFriends: 6,
-      bio: "Culture explorer | Foodie | Bangalore",
-      friends: 178,
-      trips: 32,
-      recentTrips: [
-        { name: "Mysore Palace Visit", date: "2 days ago" },
-        { name: "Coorg Weekend", date: "2 weeks ago" },
-      ],
-    },
-  ]);
+  const [friends, setFriends] = useState([]);
+  const [friendRequests, setFriendRequests] = useState([]);
 
-  const [friendRequests, setFriendRequests] = useState([
-    {
-      id: "4",
-      name: "Arjun Mehta",
-      avatar: "https://randomuser.me/api/portraits/men/4.jpg",
-      mutualFriends: 15,
-    },
-    {
-      id: "5",
-      name: "Neha Patel",
-      avatar: "https://randomuser.me/api/portraits/women/5.jpg",
-      mutualFriends: 7,
-    },
-    {
-      id: "6",
-      name: "Vikram Singh",
-      avatar: "https://randomuser.me/api/portraits/men/6.jpg",
-      mutualFriends: 9,
-    },
-  ]);
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadData = async () => {
+        try {
+          setIsLoading(true);
+          const [friendsData, requestsData] = await Promise.all([
+            getFriends(),
+            getFriendRequests(),
+          ]);
+          setFriends(friendsData);
+          setFriendRequests(requestsData);
+        } catch (error) {
+          console.log("Error:", error.cause);
+          setToastMessage(error.cause?.message || "Failed to load friends");
+          setShowToast(true);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      loadData();
+    }, [])
+  );
 
   const handleViewProfile = (friend) => {
     setSelectedProfile(friend);
@@ -283,15 +268,24 @@ const Friends = () => {
     setShowAcceptModal(true);
   };
 
-  const confirmAcceptRequest = () => {
-    setFriendRequests((prev) =>
-      prev.filter((req) => req.id !== selectedRequest.id)
-    );
-    setFriends((prev) => [...prev, selectedRequest]);
-    setShowAcceptModal(false);
-    setToastMessage(`You are now friends with ${selectedRequest.name}`);
-    setShowToast(true);
-    setSelectedRequest(null);
+  const confirmAcceptRequest = async () => {
+    try {
+      await acceptFriendRequest(selectedRequest.id);
+      setFriendRequests((prev) =>
+        prev.filter((req) => req.id !== selectedRequest.id)
+      );
+      setFriends((prev) => [...prev, selectedRequest]);
+      setShowAcceptModal(false);
+      setToastMessage(`You are now friends with ${selectedRequest.name}`);
+      setShowToast(true);
+    } catch (error) {
+      setToastMessage(
+        error.cause?.message || "Failed to accept friend request"
+      );
+      setShowToast(true);
+    } finally {
+      setSelectedRequest(null);
+    }
   };
 
   const handleDeclineRequest = (request) => {
@@ -299,14 +293,23 @@ const Friends = () => {
     setShowDeclineModal(true);
   };
 
-  const confirmDeclineRequest = () => {
-    setFriendRequests((prev) =>
-      prev.filter((req) => req.id !== selectedRequest.id)
-    );
-    setShowDeclineModal(false);
-    setToastMessage(`Friend request from ${selectedRequest.name} declined`);
-    setShowToast(true);
-    setSelectedRequest(null);
+  const confirmDeclineRequest = async () => {
+    try {
+      await declineFriendRequest(selectedRequest.id);
+      setFriendRequests((prev) =>
+        prev.filter((req) => req.id !== selectedRequest.id)
+      );
+      setShowDeclineModal(false);
+      setToastMessage(`Friend request from ${selectedRequest.name} declined`);
+      setShowToast(true);
+    } catch (error) {
+      setToastMessage(
+        error.cause?.message || "Failed to decline friend request"
+      );
+      setShowToast(true);
+    } finally {
+      setSelectedRequest(null);
+    }
   };
 
   const handleRemoveFriend = (friend) => {
@@ -314,14 +317,22 @@ const Friends = () => {
     setShowRemoveModal(true);
   };
 
-  const confirmRemoveFriend = () => {
-    setFriends((prev) => prev.filter((f) => f.id !== selectedFriend.id));
-    setShowRemoveModal(false);
-    setSelectedFriend(null);
-    setToastMessage(
-      `${selectedFriend.name} has been removed from your friends`
-    );
-    setShowToast(true);
+  const confirmRemoveFriend = async () => {
+    try {
+      await removeFriend(selectedFriend.id);
+      setFriends((prev) => prev.filter((f) => f.id !== selectedFriend.id));
+      setShowRemoveModal(false);
+      setToastMessage(
+        `${selectedFriend.name} has been removed from your friends`
+      );
+      setShowToast(true);
+    } catch (error) {
+      console.log("Error:", error);
+      setToastMessage(error.cause?.message || "Failed to remove friend");
+      setShowToast(true);
+    } finally {
+      setSelectedFriend(null);
+    }
   };
 
   const handleMessage = (friend) => {
@@ -396,8 +407,13 @@ const Friends = () => {
 
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="px-6">
-            {activeTab === "friends"
-              ? friends.map((friend) => (
+            {isLoading ? (
+              <View className="flex-1 justify-center items-center py-8">
+                <Text className="text-gray-500 font-pmedium">Loading...</Text>
+              </View>
+            ) : activeTab === "friends" ? (
+              friends.length > 0 ? (
+                friends.map((friend) => (
                   <FriendCard
                     key={friend.id}
                     friend={friend}
@@ -406,14 +422,29 @@ const Friends = () => {
                     onMessage={handleMessage}
                   />
                 ))
-              : friendRequests.map((request) => (
-                  <FriendRequestCard
-                    key={request.id}
-                    request={request}
-                    onAccept={handleAcceptRequest}
-                    onDecline={handleDeclineRequest}
-                  />
-                ))}
+              ) : (
+                <View className="flex-1 justify-center items-center py-8">
+                  <Text className="text-gray-500 font-pmedium">
+                    No friends yet
+                  </Text>
+                </View>
+              )
+            ) : friendRequests.length > 0 ? (
+              friendRequests.map((request) => (
+                <FriendRequestCard
+                  key={request.id}
+                  request={request}
+                  onAccept={handleAcceptRequest}
+                  onDecline={handleDeclineRequest}
+                />
+              ))
+            ) : (
+              <View className="flex-1 justify-center items-center py-8">
+                <Text className="text-gray-500 font-pmedium">
+                  No friend requests
+                </Text>
+              </View>
+            )}
           </View>
           <View className="h-20" />
         </ScrollView>

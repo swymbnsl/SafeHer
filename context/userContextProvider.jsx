@@ -18,15 +18,16 @@ export const UserProvider = ({ children }) => {
   const fetchUser = async () => {
     try {
       setIsLoading(true);
-      console.log(0);
       const res = await getUserFromDb();
-      console.log(res);
-      console.log(1);
       setUser({
         id: res.user_id,
         name: res.name,
         email: res.email,
         avatar: res.avatar,
+        location: res.location,
+        age: res.age,
+        interests: res.interests,
+        friends: res.friends,
       });
     } catch (error) {
       setUser(undefined);
@@ -36,7 +37,6 @@ export const UserProvider = ({ children }) => {
     }
   };
   useEffect(() => {
-    console.log(4);
     fetchUser();
   }, []);
 

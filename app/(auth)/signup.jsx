@@ -6,6 +6,8 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Image,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -47,39 +49,56 @@ export default function SignUp() {
       });
       setIsLoading(true);
 
+      if (inputs.password !== inputs.confirmPassword) {
+        Alert.alert(
+          "Password Mismatch",
+          "Passwords do not match. Please try again.",
+          [{ text: "OK" }]
+        );
+        setErrorText((prev) => ({
+          ...prev,
+          password: "Passwords do not match",
+        }));
+        return;
+      }
+
       const res = await emailSignUp(inputs.email, inputs.password, inputs.name);
-      console.log("User created successfully", res);
-      console.log(2);
+
+      if (res.error) {
+        if (res.error.message.includes("email")) {
+          Alert.alert("Email Error", "Invalid email or email already in use", [
+            { text: "OK" },
+          ]);
+          setErrorText((prev) => ({
+            ...prev,
+            email: "Invalid email or email already in use",
+          }));
+        } else if (res.error.message.includes("password")) {
+          Alert.alert(
+            "Password Error",
+            "Password should be at least 6 characters",
+            [{ text: "OK" }]
+          );
+          setErrorText((prev) => ({
+            ...prev,
+            password: "Password should be at least 6 characters",
+          }));
+        } else {
+          Alert.alert(
+            "Sign Up Error",
+            res.error.message || "Failed to sign up",
+            [{ text: "OK" }]
+          );
+        }
+        return;
+      }
+
       await fetchUser();
-      // showSuccessToast(
-      //   "Account created successfully",
-      //   "Redirecting to home..."
-      // );
-      // router.replace("/home");
     } catch (error) {
-      // if (error.cause) {
-      //   // const errorMessage = getCustomErrorMessage(
-      //   //   error.cause.code,
-      //   //   error.cause.type,
-      //   //   error.cause.message
-      //   // );
-      //   const errorMessage = error.cause.message;
-      //   showErrorToast("Error Creating Account", errorMessage);
-      //   console.log(error.cause);
-      // } else if (error instanceof ZodError) {
-      //   setErrorText((prev) => {
-      //     return {
-      //       ...prev,
-      //       [error.issues[0].path[0]]: error.issues[0].message,
-      //     };
-      //   });
-      // } else {
-      //   showErrorToast(
-      //     "Error Creating Account",
-      //     "See console for more details"
-      //   );
+      Alert.alert("Error", "An unexpected error occurred. Please try again.", [
+        { text: "OK" },
+      ]);
       console.log(error.cause);
-      // }
     } finally {
       setIsLoading(false);
     }
@@ -123,8 +142,12 @@ export default function SignUp() {
 
           <View className="flex-1 justify-center items-center">
             {/* Logo Circle */}
-            <View className="w-20 h-20 rounded-full bg-white/30 mb-3 items-center justify-center">
-              {/* Add your logo here */}
+            <View className="w-20 h-20 rounded-full overflow-hidden border-2 border-white bg-violet-100 mb-6 items-center justify-center">
+              <Image
+                source={require("../../assets/images/logo.png")}
+                resizeMode="contain"
+                className="w-full h-full"
+              />
             </View>
             <Text className="text-3xl font-pbold text-white">
               Create Account

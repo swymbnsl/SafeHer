@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import CustomButton from "../components/CustomButton";
@@ -9,7 +9,6 @@ const IntroScreen = () => {
   const { user, isLoading, fetchUser } = useUserContext();
 
   useEffect(() => {
-    console.log(1);
     fetchUser();
   }, []);
 
@@ -34,9 +33,12 @@ const IntroScreen = () => {
         {/* Top Section */}
         <View className="items-center">
           {/* Logo Circle */}
-          <View className="w-32 h-32 rounded-full bg-violet-100 mb-6 items-center justify-center">
-            {/* Add your logo here */}
-            <View className="w-20 h-20 rounded-full bg-violet-200" />
+          <View className="w-32 h-32 rounded-full overflow-hidden border-2 border-violet-600 bg-violet-100 mb-6 items-center justify-center">
+            <Image
+              source={require("../assets/images/logo.png")}
+              resizeMode="contain"
+              className="w-full h-full"
+            />
           </View>
           <Text className="text-4xl font-pbold text-gray-900 mb-3">
             SafeHer

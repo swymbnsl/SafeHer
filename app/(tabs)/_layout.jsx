@@ -5,6 +5,8 @@ import { Animated } from "react-native";
 import { useRef, useEffect } from "react";
 import { useRouter } from "expo-router";
 import { useUserContext } from "@/context/userContextProvider";
+import * as Location from "expo-location";
+import { updateUserLocation } from "@/lib/supabase";
 
 export default function TabLayout() {
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -16,6 +18,23 @@ export default function TabLayout() {
       router.replace("/");
     }
   }, [isLoading, user]);
+
+  useEffect(() => {
+    const getLocation = async () => {
+      if (user) {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === "granted") {
+          const location = await Location.getCurrentPositionAsync({});
+          await updateUserLocation(
+            location.coords.latitude,
+            location.coords.longitude
+          );
+        }
+      }
+    };
+
+    getLocation();
+  }, [user]);
 
   const fadeIn = () => {
     Animated.sequence([
@@ -159,6 +178,12 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="edit-trip"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="my-trips"
         options={{
           href: null,
         }}

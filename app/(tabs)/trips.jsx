@@ -17,180 +17,150 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import ActiveTripCard from "../../components/ActiveTripCard";
 import FiltersModal from "../../components/FiltersModal";
 import { getActiveTrips } from "../../lib/supabase";
-
-const TripCard = ({ trip, onView, isUserTrip }) => {
-  const [showViewModal, setShowViewModal] = useState(false);
-
-  const ViewTripModal = () => (
-    <Modal transparent={true} visible={showViewModal} animationType="fade">
-      <View className="flex-1 bg-black/50 justify-center items-center px-6">
-        <View className="bg-white rounded-2xl p-6 w-full max-h-[80%]">
-          <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-xl font-pbold text-[#4a3b6b]">
-              {trip.name}
-            </Text>
-            <TouchableOpacity onPress={() => setShowViewModal(false)}>
-              <Ionicons name="close" size={24} color="#4a3b6b" />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView>
-            <View className="space-y-4">
-              <View>
-                <Text className="text-[#6f5c91] font-pmedium">Date & Time</Text>
-                <Text className="text-[#4a3b6b] font-psemibold mt-1">
-                  {trip.date}, {trip.time}
-                </Text>
-              </View>
-
-              <View>
-                <Text className="text-[#6f5c91] font-pmedium">Companions</Text>
-                <Text className="text-[#4a3b6b] font-psemibold mt-1">
-                  {trip.companions} people joining
-                </Text>
-              </View>
-
-              <View>
-                <Text className="text-[#6f5c91] font-pmedium">Description</Text>
-                <Text className="text-[#4a3b6b] font-psemibold mt-1">
-                  {trip.description || "No description provided"}
-                </Text>
-              </View>
-            </View>
-          </ScrollView>
-
-          <TouchableOpacity
-            className="bg-[#9f86ff] rounded-xl py-3 mt-6"
-            onPress={() => setShowViewModal(false)}
-          >
-            <Text className="text-white font-pbold text-center">Close</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
-
-  return (
-    <View
-      className="bg-white rounded-2xl p-4 mb-4"
-      style={{
-        shadowColor: "#7C3AED",
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 4,
-      }}
-    >
-      <View className="flex-row justify-between items-start mb-3">
-        <View>
-          <Text className="text-lg font-psemibold text-gray-800">
-            {trip.name}
-          </Text>
-          <Text className="text-gray-500 font-plight">
-            {trip.date} at {trip.time}
-          </Text>
-        </View>
-        <TouchableOpacity
-          className="bg-violet-100 p-2 rounded-xl"
-          onPress={() => setShowViewModal(true)}
-        >
-          <Ionicons name="chevron-forward" size={20} color="#7C3AED" />
-        </TouchableOpacity>
-      </View>
-
-      <View className="flex-row items-center mb-3">
-        <Ionicons name="location" size={16} color="#6B7280" />
-        <Text className="text-gray-600 font-plight ml-1">{trip.location}</Text>
-        <Text className="text-gray-400 font-plight ml-2">•</Text>
-        <Text className="text-gray-600 font-plight ml-2">{trip.distance}</Text>
-      </View>
-
-      <View className="flex-row items-center justify-between">
-        <View className="flex-row items-center">
-          <Ionicons name="people" size={16} color="#6B7280" />
-          <Text className="text-gray-600 font-plight ml-1">
-            {trip.companions} companions
-          </Text>
-        </View>
-      </View>
-
-      {/* New Interest Tags Section */}
-      <View className="flex-row flex-wrap gap-2 mt-3">
-        {trip.interests.map((interest, index) => (
-          <View
-            key={index}
-            className="bg-violet-50 px-3 py-1 rounded-full border border-violet-100"
-          >
-            <Text className="text-violet-600 font-pmedium text-xs">
-              {interest}
-            </Text>
-          </View>
-        ))}
-      </View>
-
-      <ViewTripModal />
-    </View>
-  );
-};
+import { useUserContext } from "../../context/userContextProvider";
 
 const Trips = () => {
   const router = useRouter();
+  const { user } = useUserContext();
   const [trips, setTrips] = useState([]);
+  const [filteredTrips, setFilteredTrips] = useState([]);
   const [isLoadingTrips, setIsLoadingTrips] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
-  const [activeTab, setActiveTab] = useState("discover");
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
-  // Add filters state
+  // Initial filters state
   const [filters, setFilters] = useState({
-    distance: "any",
+    minDistance: "",
+    maxDistance: "",
     ageRange: "any",
-    interests: [],
-    profession: "any",
   });
 
-  // Add handler for filter options
-  const handleFilterChange = (filterType, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [filterType]: value,
-    }));
-  };
-
+  // Fetch trips only once on component mount
   useEffect(() => {
     const loadTrips = async () => {
       try {
         setIsLoadingTrips(true);
         const fetchedTrips = await getActiveTrips();
-        setTrips(fetchedTrips);
+
+        // Calculate distance for each trip
+        const tripsWithDistance = fetchedTrips.map((trip) => {
+          let distance = 0;
+          if (user?.location && trip.location?.coordinates) {
+            distance = calculateDistance(
+              user.location.latitude,
+              user.location.longitude,
+              trip.location.coordinates.latitude,
+              trip.location.coordinates.longitude
+            );
+          }
+          return { ...trip, distance };
+        });
+
+        setTrips(tripsWithDistance);
+        setFilteredTrips(tripsWithDistance);
       } catch (error) {
         console.error("Failed to load trips:", error);
+        setToastMessage("Failed to load trips");
+        setShowToast(true);
       } finally {
         setIsLoadingTrips(false);
       }
     };
 
     loadTrips();
-  }, []);
+  }, [user?.location]);
 
-  const handleViewTrip = (trip) => {
-    // Handle view trip logic here instead of in TripCard
-    setShowViewModal(true);
+  // Calculate distance between two points
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // Radius of the earth in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(lat1)) *
+        Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c; // Distance in km
+    return Math.round(d);
   };
 
-  // Transform the trip data to match ActiveTripCard props
-  const transformTripData = (trip) => ({
-    name: trip.name,
-    posterName: trip.poster.name,
-    posterAvatar: trip.poster.avatar,
-    posterAge: trip.poster.age || "25",
-    posterInterests: trip.poster.interests,
-    time: trip.start_time,
-    returnTime: trip.end_time,
-    distance: trip.distance,
-    companions: trip.max_participants,
-    image: trip.image,
-    coordinates: trip.location,
-  });
+  const deg2rad = (deg) => {
+    return deg * (Math.PI / 180);
+  };
+
+  // Handle filter changes
+  const handleFilterChange = (key, value) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  // Reset filters
+  const handleResetFilters = () => {
+    setFilters({
+      minDistance: "",
+      maxDistance: "",
+      ageRange: "any",
+    });
+  };
+
+  // Apply filters whenever filters or trips change
+  useEffect(() => {
+    const filtered = trips.filter((trip) => {
+      // Distance filter
+      const tripDistance =
+        typeof trip.distance === "string"
+          ? parseFloat(trip.distance.replace(/[^\d.]/g, ""))
+          : parseFloat(trip.distance);
+
+      const minDist = filters.minDistance ? parseFloat(filters.minDistance) : 0;
+      const maxDist = filters.maxDistance
+        ? parseFloat(filters.maxDistance)
+        : Infinity;
+
+      // Skip distance filtering if both min and max are empty
+      if (!filters.minDistance && !filters.maxDistance) {
+        // Only apply age filter
+      } else if (
+        isNaN(tripDistance) ||
+        tripDistance < minDist ||
+        tripDistance > maxDist
+      ) {
+        return false;
+      }
+
+      // Age Range filter
+      if (filters.ageRange !== "any") {
+        const posterAge = trip.users?.age;
+        if (!posterAge) return false;
+
+        if (filters.ageRange === "36+") {
+          if (posterAge < 36) return false;
+        } else {
+          const [minAge, maxAge] = filters.ageRange.split("-").map(Number);
+          if (posterAge < minAge || posterAge > maxAge) return false;
+        }
+      }
+
+      return true;
+    });
+
+    setFilteredTrips(filtered);
+  }, [trips, filters]);
+
+  // Debug logging
+  useEffect(() => {}, [filters, filteredTrips]);
+
+  // Toast auto-hide effect
+  useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => {
+        setShowToast(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showToast]);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -200,7 +170,7 @@ const Trips = () => {
           <Text className="text-2xl font-pbold text-gray-900">Trips</Text>
           <TouchableOpacity
             className="bg-violet-100 p-2 rounded-xl"
-            onPress={() => router.push("/(tabs)/new_trip")}
+            onPress={() => router.push("/(tabs)/new-trip")}
           >
             <Ionicons name="add" size={24} color="#7C3AED" />
           </TouchableOpacity>
@@ -262,20 +232,22 @@ const Trips = () => {
               <Text className="text-gray-500 text-center py-4">
                 Loading trips...
               </Text>
-            ) : trips && trips.length > 0 ? (
-              trips.map((trip) => (
+            ) : filteredTrips.length > 0 ? (
+              filteredTrips.map((trip) => (
                 <View key={trip.id} className="mb-4">
                   <ActiveTripCard
                     name={trip.name}
-                    posterName={trip.poster.name}
-                    posterAvatar={trip.poster.avatar}
-                    posterInterests={trip.poster.interests}
-                    time={trip.start_time}
-                    returnTime={trip.end_time}
+                    posterName={trip.users.name}
+                    posterAvatar={trip.users.avatar}
+                    posterInterests={trip.desired_interests}
+                    start_time={trip.start_time}
+                    end_time={trip.end_time}
                     distance={trip.distance}
-                    companions={trip.max_participants}
+                    companions={trip.max_companions}
                     image={trip.image}
-                    coordinates={trip.location}
+                    location={trip.location}
+                    userLocation={user?.location}
+                    age={user?.age}
                     fullWidth={true}
                   />
                 </View>
@@ -283,7 +255,7 @@ const Trips = () => {
             ) : (
               <View className="py-8 items-center">
                 <Text className="text-gray-500 font-pmedium text-center">
-                  No trips available at the moment
+                  No trips match your filters
                 </Text>
               </View>
             )}
@@ -297,15 +269,19 @@ const Trips = () => {
         onClose={() => setShowFilters(false)}
         filters={filters}
         handleFilterChange={handleFilterChange}
-        onReset={() =>
-          setFilters({
-            distance: "any",
-            ageRange: "any",
-            interests: [],
-            profession: "any",
-          })
-        }
+        onReset={handleResetFilters}
       />
+
+      {/* Toast Message */}
+      {showToast && (
+        <View className="absolute bottom-20 left-0 right-0 mx-6">
+          <View className="bg-gray-800 px-4 py-3 rounded-xl">
+            <Text className="text-white text-center font-pmedium">
+              {toastMessage}
+            </Text>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 };

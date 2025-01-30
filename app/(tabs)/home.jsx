@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -11,26 +11,40 @@ import QuickActionButton from "../../components/QuickActionButton";
 import RequestCard from "../../components/RequestCard";
 
 const Home = () => {
-  const router = useRouter();
   const { user, isLoading } = useUserContext();
-  const [activeTrips, setActiveTrips] = React.useState([]);
-  const [isLoadingTrips, setIsLoadingTrips] = React.useState(true);
+  const [activeTrips, setActiveTrips] = useState([]);
+  const [isLoadingTrips, setIsLoadingTrips] = useState(true);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const router = useRouter();
 
-  React.useEffect(() => {
-    const loadActiveTrips = async () => {
-      try {
-        const trips = await getActiveTrips();
-        setActiveTrips(trips);
-      } catch (error) {
-        console.error("Failed to load active trips:", error);
-        console.log(error.cause);
-      } finally {
-        setIsLoadingTrips(false);
-      }
-    };
-
-    loadActiveTrips();
+  useEffect(() => {
+    loadTrips();
   }, []);
+
+  const loadTrips = async () => {
+    try {
+      // Get active trips
+      const tripsData = await getActiveTrips();
+      setActiveTrips(tripsData);
+    } catch (error) {
+      console.error("Error loading home data:", error);
+      setToastMessage("Failed to load data");
+      setShowToast(true);
+    } finally {
+      setIsLoadingTrips(false);
+    }
+  };
+
+  // Toast auto-hide effect
+  useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => {
+        setShowToast(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showToast]);
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
@@ -81,22 +95,32 @@ const Home = () => {
               <Text className="text-gray-500">Loading trips...</Text>
             ) : activeTrips.length > 0 ? (
               activeTrips
-                .filter((trip) => trip.user_id !== user?.id)
+                .filter((trip) => trip.created_by !== user?.id)
                 .slice(0, 5)
                 .map((trip) => (
-                  <ActiveTripCard
-                    key={trip.id}
-                    name={trip.name}
-                    posterName={trip.poster.name}
-                    posterAvatar={trip.poster.avatar}
-                    posterInterests={trip.poster.interests}
-                    time={trip.start_time}
-                    returnTime={trip.end_time}
-                    distance={trip.distance}
-                    companions={trip.max_participants}
-                    image={trip.image}
-                    coordinates={trip.location}
-                  />
+                  <View key={trip.id} className="mb-4">
+                    <ActiveTripCard
+                      id={trip.id}
+                      name={trip.name}
+                      posterName={trip.users.name}
+                      posterAvatar={trip.users.avatar}
+                      posterInterests={trip.desired_interests}
+                      start_time={trip.start_time}
+                      end_time={trip.end_time}
+                      distance={trip.distance}
+                      companions={trip.max_companions}
+                      image={trip.image}
+                      location={trip.location}
+                      userLocation={user?.location}
+                      age={user?.age}
+                      createdBy={trip.created_by}
+                      isFriend={user?.friends?.includes(trip.created_by)}
+                      onRequestSent={(message) => {
+                        setToastMessage(message);
+                        setShowToast(true);
+                      }}
+                    />
+                  </View>
                 ))
             ) : (
               <Text className="text-gray-500">No active trips found</Text>
@@ -158,6 +182,17 @@ const Home = () => {
 
         <View className="h-20" />
       </ScrollView>
+
+      {/* Toast Message */}
+      {showToast && (
+        <View className="absolute bottom-20 left-0 right-0 mx-6">
+          <View className="bg-gray-800 px-4 py-3 rounded-xl">
+            <Text className="text-white text-center font-pmedium">
+              {toastMessage}
+            </Text>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 };

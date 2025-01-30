@@ -7,16 +7,17 @@ import {
   ScrollView,
   Image,
   Alert,
-  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { supabase } from "@/lib/supabase";
 import Toast from "@/components/Toast";
+import { useUserContext } from "@/context/userContextProvider";
 
 const EditProfile = () => {
   const router = useRouter();
+  const { user, fetchUser } = useUserContext();
   const [profileData, setProfileData] = useState({
     name: "",
     avatar: "",
@@ -27,12 +28,19 @@ const EditProfile = () => {
   });
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
-  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
-    loadProfile();
-    requestPermissions();
-  }, []);
+    if (user) {
+      setProfileData({
+        name: user.name || "",
+        avatar: user.avatar || "",
+        email: user.email || "",
+        phone: user.phone_number || "",
+        description: user.description || "",
+        location: user.location || "",
+      });
+    }
+  }, [user]);
 
   const requestPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -44,22 +52,10 @@ const EditProfile = () => {
     }
   };
 
-  const loadProfile = async () => {
-    try {
-      const savedProfile = await AsyncStorage.getItem("userProfile");
-      if (savedProfile) {
-        const parsedProfile = JSON.parse(savedProfile);
-        setProfileData(parsedProfile);
-      }
-    } catch (error) {
-      Alert.alert("Error", "Failed to load profile");
-    }
-  };
-
   const pickImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 1,
@@ -67,29 +63,22 @@ const EditProfile = () => {
       });
 
       if (!result.canceled && result.assets && result.assets[0]) {
-        const newAvatar = result.assets[0].uri;
+        const newAvatar = {
+          base64: result.assets[0].base64,
+          uri: result.assets[0].uri,
+        };
+
+        // Upload image and get public URL
+        const publicUrl = await supabase.uploadAvatarImage(newAvatar);
+
+        // Update local state
         setProfileData((prev) => ({
           ...prev,
-          avatar: newAvatar,
-          avatarUpdated: true,
-          lastAvatarUpdate: new Date().toISOString(),
+          avatar: publicUrl,
         }));
-
-        // Immediately save the avatar to ensure it persists
-        const currentProfile = await AsyncStorage.getItem("userProfile");
-        const parsedProfile = currentProfile ? JSON.parse(currentProfile) : {};
-        await AsyncStorage.setItem(
-          "userProfile",
-          JSON.stringify({
-            ...parsedProfile,
-            avatar: newAvatar,
-            avatarUpdated: true,
-            lastAvatarUpdate: new Date().toISOString(),
-          })
-        );
       }
     } catch (error) {
-      Alert.alert("Error", "Failed to pick image");
+      Alert.alert("Error", "Failed to update profile picture");
     }
   };
 
@@ -100,20 +89,21 @@ const EditProfile = () => {
     }
 
     try {
-      // Get the current stored profile
-      const currentProfile = await AsyncStorage.getItem("userProfile");
-      const parsedProfile = currentProfile ? JSON.parse(currentProfile) : {};
+      const { error } = await supabase
+        .from("users")
+        .update({
+          name: profileData.name,
+          email: profileData.email,
+          phone_number: profileData.phone,
+          description: profileData.description,
+          location: profileData.location,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", user.id);
 
-      // Merge the current profile with new data
-      const updatedProfile = {
-        ...parsedProfile,
-        ...profileData,
-        lastUpdated: new Date().toISOString(),
-      };
+      if (error) throw error;
 
-      // Save the merged profile
-      await AsyncStorage.setItem("userProfile", JSON.stringify(updatedProfile));
-
+      await fetchUser(); // Refresh user context
       setToastMessage("Profile updated successfully!");
       setShowToast(true);
 
@@ -127,98 +117,128 @@ const EditProfile = () => {
   };
 
   return (
-    <View className="flex-1 bg-[#fff4ff]">
-      <ScrollView className="flex-1 px-6">
-        <View className="flex-row items-center justify-between pt-14 pb-6">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="bg-white p-2 rounded-full shadow-sm"
-          >
-            <Ionicons name="arrow-back" size={24} color="#4a3b6b" />
-          </TouchableOpacity>
-          <Text className="text-2xl font-pbold text-[#4a3b6b]">
-            Edit Profile
-          </Text>
-          <View className="w-10" />
+    <View className="flex-1 bg-white">
+      <ScrollView className="flex-1">
+        {/* Header */}
+        <View className="px-6 pt-14 pb-4 border-b border-gray-100">
+          <View className="flex-row items-center justify-between">
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="bg-gray-50 p-2 rounded-xl"
+            >
+              <Ionicons name="arrow-back" size={24} color="#4a3b6b" />
+            </TouchableOpacity>
+            <Text className="text-xl font-pbold text-gray-900">
+              Edit Profile
+            </Text>
+          </View>
         </View>
 
-        <TouchableOpacity onPress={pickImage} className="items-center mb-6">
-          <View className="relative">
-            <Image
-              source={{
-                uri: profileData.avatar || "https://via.placeholder.com/150",
-              }}
-              className="w-24 h-24 rounded-full"
-            />
-            <View className="absolute bottom-0 right-0 bg-[#9f86ff] p-2 rounded-full">
-              <Ionicons name="camera" size={16} color="white" />
+        <View className="p-6">
+          {/* Profile Image */}
+          <TouchableOpacity onPress={pickImage} className="items-center mb-8">
+            <View className="relative">
+              <Image
+                source={{
+                  uri: profileData.avatar || "https://via.placeholder.com/150",
+                }}
+                className="w-24 h-24 rounded-full bg-gray-100"
+              />
+              <View className="absolute bottom-0 right-0 bg-violet-600 p-2 rounded-full shadow-sm">
+                <Ionicons name="camera" size={16} color="white" />
+              </View>
+            </View>
+          </TouchableOpacity>
+
+          {/* Form Fields */}
+          <View className="space-y-6">
+            {/* Name Input */}
+            <View>
+              <Text className="text-gray-700 font-pmedium mb-2">Name</Text>
+              <TextInput
+                className="bg-gray-50 rounded-xl p-4 text-gray-800 font-pmedium"
+                value={profileData.name}
+                onChangeText={(text) =>
+                  setProfileData((prev) => ({ ...prev, name: text }))
+                }
+                placeholder="Enter your name"
+              />
+            </View>
+
+            {/* Email Input */}
+            <View>
+              <Text className="text-gray-700 font-pmedium mb-2">Email</Text>
+              <TextInput
+                className="bg-gray-50 rounded-xl p-4 text-gray-800 font-pmedium"
+                value={profileData.email}
+                onChangeText={(text) =>
+                  setProfileData((prev) => ({ ...prev, email: text }))
+                }
+                keyboardType="email-address"
+                placeholder="Enter your email"
+              />
+            </View>
+
+            {/* Phone Input */}
+            <View>
+              <Text className="text-gray-700 font-pmedium mb-2">Phone</Text>
+              <TextInput
+                className="bg-gray-50 rounded-xl p-4 text-gray-800 font-pmedium"
+                value={profileData.phone}
+                onChangeText={(text) =>
+                  setProfileData((prev) => ({ ...prev, phone: text }))
+                }
+                keyboardType="phone-pad"
+                placeholder="Enter your phone number"
+              />
+            </View>
+
+            {/* Description Input */}
+            <View>
+              <Text className="text-gray-700 font-pmedium mb-2">
+                Description
+              </Text>
+              <TextInput
+                className="bg-gray-50 rounded-xl p-4 text-gray-800 font-pmedium min-h-[120]"
+                value={profileData.description}
+                onChangeText={(text) =>
+                  setProfileData((prev) => ({ ...prev, description: text }))
+                }
+                multiline
+                numberOfLines={4}
+                placeholder="Tell us about yourself"
+              />
+            </View>
+
+            {/* Location Input */}
+            <View>
+              <Text className="text-gray-700 font-pmedium mb-2">Location</Text>
+              <TextInput
+                className="bg-gray-50 rounded-xl p-4 text-gray-800 font-pmedium"
+                value={profileData.location}
+                onChangeText={(text) =>
+                  setProfileData((prev) => ({ ...prev, location: text }))
+                }
+                placeholder="Enter your location"
+              />
             </View>
           </View>
-        </TouchableOpacity>
 
-        <Text className="text-[#6f5c91] font-pmedium mb-2">Name</Text>
-        <TextInput
-          className="bg-white rounded-xl p-3 text-[#4a3b6b] font-pmedium mb-4 border border-[#f0e6ff]"
-          value={profileData.name}
-          onChangeText={(text) =>
-            setProfileData((prev) => ({ ...prev, name: text }))
-          }
-        />
-
-        <Text className="text-[#6f5c91] font-pmedium mb-2">Email</Text>
-        <TextInput
-          className="bg-white rounded-xl p-3 text-[#4a3b6b] font-pmedium mb-4 border border-[#f0e6ff]"
-          value={profileData.email}
-          onChangeText={(text) =>
-            setProfileData((prev) => ({ ...prev, email: text }))
-          }
-          keyboardType="email-address"
-        />
-
-        <Text className="text-[#6f5c91] font-pmedium mb-2">Phone</Text>
-        <TextInput
-          className="bg-white rounded-xl p-3 text-[#4a3b6b] font-pmedium mb-4 border border-[#f0e6ff]"
-          value={profileData.phone}
-          onChangeText={(text) =>
-            setProfileData((prev) => ({ ...prev, phone: text }))
-          }
-          keyboardType="phone-pad"
-        />
-
-        <Text className="text-[#6f5c91] font-pmedium mb-2">Description</Text>
-        <TextInput
-          className="bg-white rounded-xl p-3 text-[#4a3b6b] font-pmedium mb-4 border border-[#f0e6ff]"
-          value={profileData.description}
-          onChangeText={(text) =>
-            setProfileData((prev) => ({ ...prev, description: text }))
-          }
-          multiline
-          numberOfLines={3}
-        />
-
-        <Text className="text-[#6f5c91] font-pmedium mb-2">Location</Text>
-        <TextInput
-          className="bg-white rounded-xl p-3 text-[#4a3b6b] font-pmedium mb-6 border border-[#f0e6ff]"
-          value={profileData.location}
-          onChangeText={(text) =>
-            setProfileData((prev) => ({ ...prev, location: text }))
-          }
-        />
-
-        <TouchableOpacity
-          className="bg-[#9f86ff] rounded-xl py-4 items-center mb-6"
-          onPress={handleUpdateProfile}
-        >
-          <Text className="text-white font-pbold text-lg">Save Changes</Text>
-        </TouchableOpacity>
+          {/* Save Button */}
+          <TouchableOpacity
+            className="bg-violet-600 rounded-xl py-4 mt-8 mb-6"
+            onPress={handleUpdateProfile}
+          >
+            <Text className="text-white font-pbold text-center text-lg">
+              Save Changes
+            </Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
+      {/* Toast */}
       {showToast && (
-        <Toast
-          message={toastMessage}
-          type="success"
-          onHide={() => setShowToast(false)}
-        />
+        <Toast message={toastMessage} onHide={() => setShowToast(false)} />
       )}
     </View>
   );

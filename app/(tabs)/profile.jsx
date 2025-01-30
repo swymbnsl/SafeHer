@@ -17,6 +17,8 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { signOut } from "@/lib/supabase";
+import { getUserFromDb, getUserTrips, getFriends } from "@/lib/supabase";
+
 const StatCard = ({ icon, label, value }) => (
   <View
     className="bg-white p-4 rounded-2xl flex-1 mx-1.5"
@@ -38,26 +40,15 @@ const StatCard = ({ icon, label, value }) => (
 
 const Profile = () => {
   const [profile, setProfile] = useState({
-    name: "John Doe",
-    avatar: "https://randomuser.me/api/portraits/men/1.jpg",
-    email: "john.doe@example.com",
-    phone: "+91 98765 43210",
-    description: "Travel enthusiast | Food lover | Adventure seeker",
-    location: "Delhi",
-    totalTrips: 12,
-    friends: 45,
-    recentTrips: [
-      {
-        name: "Delhi Music Festival",
-        date: "15th October 2023",
-        status: "completed",
-      },
-      {
-        name: "Qutub Minar Visit",
-        date: "25th October 2023",
-        status: "upcoming",
-      },
-    ],
+    name: "",
+    avatar: null,
+    email: "",
+    phone: "",
+    description: "",
+    location: "",
+    totalTrips: 0,
+    friends: 0,
+    recentTrips: [],
   });
   const [refreshing, setRefreshing] = useState(false);
   const [blinkOpacity] = useState(new Animated.Value(1));
@@ -108,16 +99,32 @@ const Profile = () => {
 
   const loadProfile = async () => {
     try {
-      const savedProfile = await AsyncStorage.getItem("userProfile");
-      if (savedProfile) {
-        const parsedProfile = JSON.parse(savedProfile);
-        setProfile((prev) => ({
-          ...prev,
-          ...parsedProfile,
-        }));
-      }
+      const userData = await getUserFromDb();
+      const userTrips = await getUserTrips();
+      const userFriends = await getFriends();
+
+      const recentTrips = userTrips.slice(0, 2).map((trip) => ({
+        name: trip.name,
+        date: new Date(trip.start_time).toLocaleDateString("en-US", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }),
+        status: trip.status,
+      }));
+
+      setProfile({
+        name: userData.name,
+        avatar: userData.avatar,
+        email: userData.email,
+        phone: userData.phone_number || "Add your phone",
+        totalTrips: userTrips.length,
+        friends: userFriends.length,
+        recentTrips,
+      });
     } catch (error) {
-      console.log("Error loading profile:", error);
+      console.error("Error loading profile:", error);
+      Alert.alert("Error", "Failed to load profile data");
     }
   };
 
@@ -199,7 +206,7 @@ const Profile = () => {
               </Animated.View>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => router.push("/edit_profile")}
+              onPress={() => router.push("/edit-profile")}
               className="bg-violet-100 p-2 rounded-full"
             >
               <Ionicons name="pencil" size={20} color="#7C3AED" />
@@ -208,10 +215,21 @@ const Profile = () => {
 
           <View className="items-center">
             <TouchableOpacity onPress={pickImage} className="relative">
-              <Image
-                source={{ uri: profile.avatar }}
-                className="w-24 h-24 rounded-full"
-              />
+              {profile.avatar ? (
+                <Image
+                  source={{ uri: profile.avatar }}
+                  className="w-24 h-24 rounded-full"
+                />
+              ) : (
+                <View className="w-24 h-24 rounded-full bg-violet-100 items-center justify-center">
+                  <Text
+                    className="text-4xl font-pbold text-violet-600"
+                    style={{ lineHeight: 45 }}
+                  >
+                    {profile.name ? profile.name.charAt(0).toUpperCase() : "?"}
+                  </Text>
+                </View>
+              )}
               <View className="absolute bottom-0 right-0 bg-violet-600 p-2 rounded-full">
                 <Ionicons name="camera" size={16} color="white" />
               </View>
@@ -252,32 +270,12 @@ const Profile = () => {
                 {profile.phone}
               </Text>
             </View>
-            <View className="flex-row items-center mb-4">
+            <View className="flex-row items-center">
               <View className="bg-violet-100 p-2 rounded-xl mr-3">
                 <Ionicons name="mail-outline" size={20} color="#7C3AED" />
               </View>
               <Text className="text-gray-700 font-pmedium">
                 {profile.email}
-              </Text>
-            </View>
-            <View className="flex-row items-center mb-4">
-              <View className="bg-violet-100 p-2 rounded-xl mr-3">
-                <Ionicons name="location-outline" size={20} color="#7C3AED" />
-              </View>
-              <Text className="text-gray-700 font-pmedium">
-                {profile.location}
-              </Text>
-            </View>
-            <View className="flex-row items-start">
-              <View className="bg-violet-100 p-2 rounded-xl mr-3">
-                <Ionicons
-                  name="information-circle-outline"
-                  size={20}
-                  color="#7C3AED"
-                />
-              </View>
-              <Text className="text-gray-700 font-pmedium flex-1">
-                {profile.description}
               </Text>
             </View>
           </View>

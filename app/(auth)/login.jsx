@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -81,8 +82,12 @@ const LoginScreen = () => {
 
         <View className="flex-1 justify-center items-center">
           {/* Logo Circle */}
-          <View className="w-20 h-20 rounded-full bg-white/30 mb-3 items-center justify-center">
-            {/* Add your logo here */}
+          <View className="w-20 h-20 rounded-full overflow-hidden border-2 border-white bg-violet-100 mb-6 items-center justify-center">
+            <Image
+              source={require("../../assets/images/logo.png")}
+              resizeMode="contain"
+              className="w-full h-full"
+            />
           </View>
           <Text className="text-3xl font-pbold text-white">Welcome Back</Text>
           <Text className="text-white/80 mt-2 font-plight">
