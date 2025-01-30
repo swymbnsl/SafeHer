@@ -14,6 +14,9 @@ import { useRouter, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NotificationPopup } from "./home";
 import { SafeAreaView } from "react-native-safe-area-context";
+import ActiveTripCard from "../../components/ActiveTripCard";
+import FiltersModal from "../../components/FiltersModal";
+import { getActiveTrips } from "../../lib/supabase";
 
 const TripCard = ({ trip, onView, isUserTrip }) => {
   const [showViewModal, setShowViewModal] = useState(false);
@@ -130,60 +133,12 @@ const TripCard = ({ trip, onView, isUserTrip }) => {
   );
 };
 
-const demoTrips = [
-  {
-    id: 1,
-    name: "Evening Walk at Lodhi Garden",
-    date: "Today",
-    time: "5:00 PM",
-    location: "Lodhi Garden",
-    distance: "2.5 km away",
-    companions: 3,
-    interests: ["Walking", "Photography"],
-    isPast: false,
-  },
-  {
-    id: 2,
-    name: "Coffee & Art Gallery Visit",
-    date: "Tomorrow",
-    time: "3:00 PM",
-    location: "Kala Ghoda",
-    distance: "4.2 km away",
-    companions: 2,
-    interests: ["Art", "Coffee"],
-    isPast: false,
-  },
-  {
-    id: 3,
-    name: "Morning Yoga in Park",
-    date: "26th Oct",
-    time: "7:00 AM",
-    location: "Deer Park",
-    distance: "1.8 km away",
-    companions: 4,
-    interests: ["Yoga", "Wellness"],
-    isPast: false,
-  },
-  {
-    id: 4,
-    name: "Street Food Tour",
-    date: "27th Oct",
-    time: "6:00 PM",
-    location: "Chandni Chowk",
-    distance: "5.5 km away",
-    companions: 3,
-    interests: ["Food", "Culture"],
-    isPast: false,
-  },
-];
-
 const Trips = () => {
   const router = useRouter();
-  const [userTrips, setUserTrips] = useState([]);
-  const [discoverTrips, setDiscoverTrips] = useState(demoTrips);
+  const [trips, setTrips] = useState([]);
+  const [isLoadingTrips, setIsLoadingTrips] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState("discover");
-  const [activeFilter, setActiveFilter] = useState("all");
 
   // Add filters state
   const [filters, setFilters] = useState({
@@ -202,22 +157,15 @@ const Trips = () => {
   };
 
   useEffect(() => {
-    // Load trips from AsyncStorage
     const loadTrips = async () => {
       try {
-        const savedDiscoverTrips = await AsyncStorage.getItem("discoverTrips");
-        if (savedDiscoverTrips) {
-          setDiscoverTrips(JSON.parse(savedDiscoverTrips));
-        } else {
-          await AsyncStorage.setItem(
-            "discoverTrips",
-            JSON.stringify(demoTrips)
-          );
-          setDiscoverTrips(demoTrips);
-        }
+        setIsLoadingTrips(true);
+        const fetchedTrips = await getActiveTrips();
+        setTrips(fetchedTrips);
       } catch (error) {
         console.error("Failed to load trips:", error);
-        setDiscoverTrips(demoTrips);
+      } finally {
+        setIsLoadingTrips(false);
       }
     };
 
@@ -229,11 +177,26 @@ const Trips = () => {
     setShowViewModal(true);
   };
 
+  // Transform the trip data to match ActiveTripCard props
+  const transformTripData = (trip) => ({
+    name: trip.name,
+    posterName: trip.poster.name,
+    posterAvatar: trip.poster.avatar,
+    posterAge: trip.poster.age || "25",
+    posterInterests: trip.poster.interests,
+    time: trip.start_time,
+    returnTime: trip.end_time,
+    distance: trip.distance,
+    companions: trip.max_participants,
+    image: trip.image,
+    coordinates: trip.location,
+  });
+
   return (
     <SafeAreaView className="flex-1 bg-white">
-      {/* Header */}
+      {/* Fixed Header */}
       <View className="px-6 pt-2 pb-4">
-        <View className="flex-row items-center justify-between mb-4">
+        <View className="flex-row items-center justify-between">
           <Text className="text-2xl font-pbold text-gray-900">Trips</Text>
           <TouchableOpacity
             className="bg-violet-100 p-2 rounded-xl"
@@ -242,271 +205,109 @@ const Trips = () => {
             <Ionicons name="add" size={24} color="#7C3AED" />
           </TouchableOpacity>
         </View>
-
-        {/* Search Bar */}
-        <View className="mb-4">
-          <View className="flex-row items-center bg-gray-50 rounded-xl p-3">
-            <Ionicons name="search" size={20} color="#6B7280" />
-            <TextInput
-              className="flex-1 ml-2 font-pregular text-gray-700"
-              placeholder="Search places, interests..."
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
-        </View>
-
-        {/* Filter Button */}
-        <TouchableOpacity
-          className={`flex-row items-center justify-center py-3 px-4 rounded-xl mb-4 ${
-            showFilters ? "bg-violet-600" : "bg-gray-50"
-          }`}
-          onPress={() => setShowFilters(!showFilters)}
-        >
-          <Ionicons
-            name="options-outline"
-            size={20}
-            color={showFilters ? "white" : "#6B7280"}
-          />
-          <Text
-            className={`ml-2 font-pmedium ${
-              showFilters ? "text-white" : "text-gray-600"
-            }`}
-          >
-            Filter Options
-          </Text>
-        </TouchableOpacity>
-
-        {/* Filter Tags */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          className="mt-4"
-        >
-          <FilterTag
-            label="All"
-            active={activeFilter === "all"}
-            onPress={() => setActiveFilter("all")}
-          />
-          <FilterTag
-            label="Nearby"
-            active={activeFilter === "nearby"}
-            onPress={() => setActiveFilter("nearby")}
-          />
-          <FilterTag
-            label="This Week"
-            active={activeFilter === "thisWeek"}
-            onPress={() => setActiveFilter("thisWeek")}
-          />
-          <FilterTag
-            label="Popular"
-            active={activeFilter === "popular"}
-            onPress={() => setActiveFilter("popular")}
-          />
-        </ScrollView>
       </View>
 
-      {/* Filter Modal */}
-      <Modal
-        transparent={true}
-        visible={showFilters}
-        animationType="slide"
-        onRequestClose={() => setShowFilters(false)}
-      >
-        <View className="flex-1 bg-black/50">
-          <View className="bg-white rounded-t-3xl mt-auto p-6">
-            <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-xl font-pbold text-gray-800">Filters</Text>
-              <TouchableOpacity
-                onPress={() =>
-                  setFilters({
-                    distance: "any",
-                    ageRange: "any",
-                    interests: [],
-                    profession: "any",
-                  })
-                }
-              >
-                <Text className="text-violet-600 font-pmedium">Reset All</Text>
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView className="max-h-[70vh]">
-              {/* Distance Filter */}
-              <View className="mb-6">
-                <Text className="text-sm font-pmedium text-gray-600 mb-3">
-                  Distance
-                </Text>
-                <View className="flex-row flex-wrap gap-2">
-                  <FilterOption
-                    label="< 5km"
-                    selected={filters.distance === "5km"}
-                    onPress={() => handleFilterChange("distance", "5km")}
-                  />
-                  <FilterOption
-                    label="5-10km"
-                    selected={filters.distance === "10km"}
-                    onPress={() => handleFilterChange("distance", "10km")}
-                  />
-                  <FilterOption
-                    label="10-20km"
-                    selected={filters.distance === "20km"}
-                    onPress={() => handleFilterChange("distance", "20km")}
-                  />
-                </View>
-              </View>
-
-              {/* Age Range Filter */}
-              <View className="mb-6">
-                <Text className="text-sm font-pmedium text-gray-600 mb-3">
-                  Age Range
-                </Text>
-                <View className="flex-row flex-wrap gap-2">
-                  <FilterOption
-                    label="18-25"
-                    selected={filters.ageRange === "18-25"}
-                    onPress={() => handleFilterChange("ageRange", "18-25")}
-                  />
-                  <FilterOption
-                    label="26-35"
-                    selected={filters.ageRange === "26-35"}
-                    onPress={() => handleFilterChange("ageRange", "26-35")}
-                  />
-                  <FilterOption
-                    label="36+"
-                    selected={filters.ageRange === "36+"}
-                    onPress={() => handleFilterChange("ageRange", "36+")}
-                  />
-                </View>
-              </View>
-
-              {/* Interests Filter */}
-              <View className="mb-6">
-                <Text className="text-sm font-pmedium text-gray-600 mb-3">
-                  Interests
-                </Text>
-                <View className="flex-row flex-wrap gap-2">
-                  <InterestTag label="Photography" />
-                  <InterestTag label="Hiking" />
-                  <InterestTag label="Food" />
-                  <InterestTag label="Art" />
-                  <InterestTag label="Music" />
-                  <InterestTag label="Sports" />
-                  <InterestTag label="Travel" />
-                  <InterestTag label="Reading" />
-                </View>
-              </View>
-
-              {/* Profession Filter */}
-              <View className="mb-6">
-                <Text className="text-sm font-pmedium text-gray-600 mb-3">
-                  Profession
-                </Text>
-                <View className="flex-row flex-wrap gap-2">
-                  <FilterOption
-                    label="Student"
-                    selected={filters.profession === "student"}
-                    onPress={() => handleFilterChange("profession", "student")}
-                  />
-                  <FilterOption
-                    label="Professional"
-                    selected={filters.profession === "professional"}
-                    onPress={() =>
-                      handleFilterChange("profession", "professional")
-                    }
-                  />
-                  <FilterOption
-                    label="Other"
-                    selected={filters.profession === "other"}
-                    onPress={() => handleFilterChange("profession", "other")}
-                  />
-                </View>
-              </View>
-            </ScrollView>
-
-            {/* Apply Button */}
-            <View className="mt-6 space-y-3">
-              <TouchableOpacity
-                className="bg-violet-600 py-3.5 rounded-xl"
-                onPress={() => setShowFilters(false)}
-              >
-                <Text className="text-white font-pbold text-center">
-                  Apply Filters
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                className="py-3"
-                onPress={() => setShowFilters(false)}
-              >
-                <Text className="text-gray-600 font-pmedium text-center">
-                  Cancel
-                </Text>
-              </TouchableOpacity>
+      {/* Scrollable Content */}
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <View className="px-6">
+          {/* Search Bar */}
+          <View className="mb-4">
+            <View className="flex-row items-center bg-gray-50 rounded-xl p-3">
+              <Ionicons name="search" size={20} color="#6B7280" />
+              <TextInput
+                className="flex-1 ml-2 font-pregular text-gray-700"
+                placeholder="Search places, interests..."
+                placeholderTextColor="#9CA3AF"
+              />
             </View>
           </View>
-        </View>
-      </Modal>
 
-      {/* Trips List */}
-      <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
-        <View className="py-4">
-          <Text className="text-lg font-psemibold text-gray-800 mb-4">
-            Available Trips
-          </Text>
-          {discoverTrips && discoverTrips.length > 0 ? (
-            discoverTrips.map((trip) => (
-              <TripCard
-                key={trip.id}
-                trip={trip}
-                onView={() => handleViewTrip(trip)}
-                isUserTrip={false}
+          {/* Filter and My Trips Buttons */}
+          <View className="space-y-3 mb-4">
+            <TouchableOpacity
+              className={`flex-row items-center justify-center py-3 px-4 rounded-xl ${
+                showFilters ? "bg-violet-600" : "bg-gray-50"
+              }`}
+              onPress={() => setShowFilters(!showFilters)}
+            >
+              <Ionicons
+                name="options-outline"
+                size={20}
+                color={showFilters ? "white" : "#6B7280"}
               />
-            ))
-          ) : (
-            <View className="py-8 items-center">
-              <Text className="text-gray-500 font-pmedium text-center">
-                No trips available at the moment
+              <Text
+                className={`ml-2 font-pmedium ${
+                  showFilters ? "text-white" : "text-gray-600"
+                }`}
+              >
+                Filter Options
               </Text>
-            </View>
-          )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className="flex-row items-center justify-center py-3 px-4 rounded-xl bg-violet-600 mt-2"
+              onPress={() => router.push("/my-trips")}
+            >
+              <Ionicons name="bookmark-outline" size={20} color="white" />
+              <Text className="ml-2 font-pmedium text-white">My Trips</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Available Trips Section */}
+          <View className="py-4">
+            <Text className="text-lg font-psemibold text-gray-800 mb-4">
+              Available Trips
+            </Text>
+            {isLoadingTrips ? (
+              <Text className="text-gray-500 text-center py-4">
+                Loading trips...
+              </Text>
+            ) : trips && trips.length > 0 ? (
+              trips.map((trip) => (
+                <View key={trip.id} className="mb-4">
+                  <ActiveTripCard
+                    name={trip.name}
+                    posterName={trip.poster.name}
+                    posterAvatar={trip.poster.avatar}
+                    posterInterests={trip.poster.interests}
+                    time={trip.start_time}
+                    returnTime={trip.end_time}
+                    distance={trip.distance}
+                    companions={trip.max_participants}
+                    image={trip.image}
+                    coordinates={trip.location}
+                    fullWidth={true}
+                  />
+                </View>
+              ))
+            ) : (
+              <View className="py-8 items-center">
+                <Text className="text-gray-500 font-pmedium text-center">
+                  No trips available at the moment
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
       </ScrollView>
+
+      {/* Filters Modal */}
+      <FiltersModal
+        visible={showFilters}
+        onClose={() => setShowFilters(false)}
+        filters={filters}
+        handleFilterChange={handleFilterChange}
+        onReset={() =>
+          setFilters({
+            distance: "any",
+            ageRange: "any",
+            interests: [],
+            profession: "any",
+          })
+        }
+      />
     </SafeAreaView>
   );
 };
-
-const FilterTag = ({ label, active, onPress }) => (
-  <TouchableOpacity
-    onPress={onPress}
-    className={`px-4 py-2 rounded-xl mr-2 ${
-      active ? "bg-violet-600" : "bg-gray-50"
-    }`}
-  >
-    <Text className={`font-pmedium ${active ? "text-white" : "text-gray-600"}`}>
-      {label}
-    </Text>
-  </TouchableOpacity>
-);
-
-const FilterOption = ({ label, selected, onPress }) => (
-  <TouchableOpacity
-    onPress={onPress}
-    className={`px-4 py-2 rounded-xl ${
-      selected ? "bg-violet-600" : "bg-gray-50"
-    }`}
-  >
-    <Text
-      className={`font-pmedium ${selected ? "text-white" : "text-gray-600"}`}
-    >
-      {label}
-    </Text>
-  </TouchableOpacity>
-);
-
-const InterestTag = ({ label }) => (
-  <TouchableOpacity className="px-3 py-1.5 bg-violet-100 rounded-lg">
-    <Text className="font-pmedium text-violet-600 text-sm">{label}</Text>
-  </TouchableOpacity>
-);
 
 export default Trips;
