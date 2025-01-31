@@ -234,7 +234,7 @@ const NewTrip = () => {
       setShowToast(true);
 
       setTimeout(() => {
-        router.replace("/trips");
+        router.replace("/my-trips");
       }, 1500);
     } catch (error) {
       setError(error.cause?.message || "Failed to create trip");

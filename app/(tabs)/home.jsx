@@ -17,6 +17,7 @@ import {
   startSharingMyLocation,
   startLocationSharing,
   updateLocationSharingStatus,
+  getUserFromDb,
 } from "../../lib/supabase";
 
 import ActiveTripCard from "../../components/ActiveTripCard";
@@ -34,8 +35,45 @@ const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    loadTrips();
+    // Check initial location sharing status and load trips
+    const initializeScreen = async () => {
+      try {
+        // Get user data which includes sharing_location status
+        const userData = await getUserFromDb();
+        setIsSharing(userData.sharing_location || false);
 
+        // If location was being shared, restart the sharing
+        if (userData.sharing_location) {
+          const stopSharingFn = await startSharingMyLocation();
+          const subscription = startLocationSharing(
+            userData.user_id,
+            (location) => {
+              console.log("Location updated:", location);
+            }
+          );
+
+          setLocationInterval(() => {
+            return async () => {
+              subscription.unsubscribe();
+              if (stopSharingFn) {
+                await stopSharingFn();
+              }
+            };
+          });
+        }
+
+        // Load trips
+        await loadTrips();
+      } catch (error) {
+        console.error("Error initializing screen:", error);
+        setToastMessage(error.message || "Failed to initialize screen");
+        setShowToast(true);
+      }
+    };
+
+    initializeScreen();
+
+    // Cleanup function
     return () => {
       if (locationInterval) {
         locationInterval();

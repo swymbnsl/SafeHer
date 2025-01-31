@@ -21,35 +21,8 @@ import {
   declineFriendRequest,
   removeFriend,
 } from "@/lib/supabase";
-import * as Location from "expo-location";
-import { calculateDistance } from "@/utils/locationUtils";
 
 const FriendCard = ({ friend, onViewProfile, onRemove, onMessage }) => {
-  const [distance, setDistance] = useState(null);
-
-  useEffect(() => {
-    if (friend.location) {
-      const getLocationDistance = async () => {
-        try {
-          const { status } = await Location.requestForegroundPermissionsAsync();
-          if (status !== "granted") return;
-
-          const location = await Location.getCurrentPositionAsync({});
-          const dist = calculateDistance(
-            location.coords.latitude,
-            location.coords.longitude,
-            friend.location.latitude,
-            friend.location.longitude
-          );
-          setDistance(dist);
-        } catch (error) {
-          console.log("Error calculating distance:", error);
-        }
-      };
-      getLocationDistance();
-    }
-  }, [friend.location]);
-
   return (
     <TouchableOpacity
       className="bg-white p-4 rounded-2xl mb-4 relative"
@@ -99,24 +72,6 @@ const FriendCard = ({ friend, onViewProfile, onRemove, onMessage }) => {
               >
                 {friend.bio}
               </Text>
-            )}
-
-            {(friend.location || distance) && (
-              <View className="flex-row items-center">
-                <Ionicons name="location" size={14} color="#6B7280" />
-                <Text className="text-gray-500 font-pmedium text-sm ml-1">
-                  {distance ? `${distance} away` : "Location shared"}
-                </Text>
-              </View>
-            )}
-
-            {friend.trips > 0 && (
-              <View className="flex-row items-center mt-1">
-                <Ionicons name="map" size={14} color="#6B7280" />
-                <Text className="text-gray-500 font-pmedium text-sm ml-1">
-                  {friend.trips} trips
-                </Text>
-              </View>
             )}
           </View>
         </View>
@@ -241,23 +196,13 @@ const ProfileModal = ({ visible, onClose, profile }) => (
                 </Text>
                 <Text className="text-[#6f5c91] font-pmedium">Friends</Text>
               </View>
-              <View className="items-center">
-                <Text className="text-2xl font-pbold text-[#4a3b6b]">
-                  {profile.trips || 0}
-                </Text>
-                <Text className="text-[#6f5c91] font-pmedium">Trips</Text>
-              </View>
             </View>
 
-            <Text className="text-lg font-pbold text-[#4a3b6b] mb-4">
-              Recent Trips
-            </Text>
-            {profile.recentTrips?.map((trip, index) => (
-              <View key={index} className="bg-[#fff4ff] p-4 rounded-xl mb-4">
-                <Text className="text-[#4a3b6b] font-pbold">{trip.name}</Text>
-                <Text className="text-[#6f5c91] font-pmedium">{trip.date}</Text>
-              </View>
-            ))}
+            {profile.bio && (
+              <Text className="text-[#6f5c91] font-pmedium mb-6">
+                {profile.bio}
+              </Text>
+            )}
           </ScrollView>
         )}
       </View>
@@ -422,7 +367,10 @@ const Friends = () => {
   const handleMessage = (friend) => {
     router.push({
       pathname: "/(tabs)/chat",
-      params: { name: friend.name },
+      params: {
+        id: friend.id,
+        type: "friend", // This indicates we're coming from friends screen
+      },
     });
   };
 

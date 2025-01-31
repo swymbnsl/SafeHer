@@ -38,7 +38,12 @@ const ChatPreview = ({ chat, onPress }) => (
       shadowOffset: { width: 0, height: 4 },
       elevation: 4,
     }}
-    onPress={onPress}
+    onPress={() =>
+      onPress({
+        id: chat.id,
+        type: "conversation",
+      })
+    }
   >
     <View className="flex-row items-center">
       <View className="relative">
@@ -89,7 +94,6 @@ const Chats = () => {
   const [conversations, setConversations] = React.useState([]);
   const [friends, setFriends] = React.useState([]);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [showAllFriends, setShowAllFriends] = React.useState(false);
 
   React.useEffect(() => {
     loadData();
@@ -270,20 +274,21 @@ const Chats = () => {
     </ScrollView>
   );
 
+  const handleChatPress = (chatData) => {
+    router.push({
+      pathname: "/(tabs)/chat",
+      params: {
+        id: chatData.id,
+        type: chatData.type,
+      },
+    });
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <View className="px-6 pt-2 pb-4 bg-white">
         <View className="flex-row items-center justify-between">
           <Text className="text-2xl font-pbold text-gray-900">Messages</Text>
-          <TouchableOpacity onPress={() => setShowAllFriends(!showAllFriends)}>
-            <View className="w-10 h-10 bg-gray-50 rounded-full items-center justify-center">
-              <Ionicons
-                name={showAllFriends ? "chatbubbles-outline" : "people-outline"}
-                size={22}
-                color="#7C3AED"
-              />
-            </View>
-          </TouchableOpacity>
         </View>
 
         <View className="mt-4 flex-row items-center bg-gray-50 rounded-xl p-3">
@@ -297,55 +302,17 @@ const Chats = () => {
       </View>
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {!showAllFriends && <FriendsList />}
+        <FriendsList />
 
         <View className="px-6 pt-4">
           {isLoading ? (
             <Text className="text-gray-500 text-center py-4">Loading...</Text>
-          ) : showAllFriends ? (
-            friends.length > 0 ? (
-              friends.map((friend) => (
-                <ChatPreview
-                  key={friend.id}
-                  chat={{
-                    ...friend,
-                    lastMessage: "Start a conversation",
-                    lastMessageTime: "",
-                    unreadCount: 0,
-                    isOnline: false,
-                  }}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/(tabs)/chat",
-                      params: {
-                        name: friend.name,
-                        id: friend.id,
-                        type: "friend",
-                      },
-                    })
-                  }
-                />
-              ))
-            ) : (
-              <Text className="text-gray-500 text-center py-4">
-                No friends yet. Add some friends to start chatting!
-              </Text>
-            )
           ) : conversations.length > 0 ? (
             conversations.map((conversation) => (
               <ChatPreview
                 key={conversation.id}
                 chat={conversation}
-                onPress={() =>
-                  router.push({
-                    pathname: "/(tabs)/chat",
-                    params: {
-                      name: conversation.name,
-                      id: conversation.id,
-                      type: "conversation",
-                    },
-                  })
-                }
+                onPress={handleChatPress}
               />
             ))
           ) : (

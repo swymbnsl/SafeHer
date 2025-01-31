@@ -17,6 +17,7 @@ import {
   sendMessage,
   getMessages,
   supabase,
+  getUserById,
 } from "@/lib/supabase";
 import { useUserContext } from "@/context/userContextProvider";
 
@@ -28,9 +29,10 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [conversationId, setConversationId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [otherUser, setOtherUser] = useState(null);
   const scrollViewRef = useRef();
   const subscriptionRef = useRef(null);
-
+  console.log("params", params);
   useEffect(() => {
     initializeChat();
     return () => {
@@ -101,10 +103,38 @@ const Chat = () => {
 
   const initializeChat = async () => {
     try {
-      let convId = params.id;
-      if (params.type !== "conversation") {
-        convId = await getOrCreateConversation(params.id);
+      let convId;
+      let otherUserId;
+
+      // If opened from chats screen, params.id is already a conversation_id
+      if (params.type === "conversation") {
+        convId = params.id;
+
+        // Get conversation details to find the other user's ID
+        const { data: conversation, error } = await supabase
+          .from("conversations")
+          .select("participants")
+          .eq("id", convId)
+          .single();
+
+        if (error) throw error;
+
+        // Find the other user's ID from participants
+        otherUserId = conversation.participants.find((id) => id !== user.id);
+
+        // Fetch other user's details
+        const userDetails = await getUserById(otherUserId);
+        setOtherUser(userDetails);
+      } else {
+        // If opened from friends screen, params.id is a user_id
+        otherUserId = params.id;
+        convId = await getOrCreateConversation(otherUserId);
+
+        // Fetch other user's details
+        const userDetails = await getUserById(otherUserId);
+        setOtherUser(userDetails);
       }
+
       setConversationId(convId);
 
       // Load existing messages
@@ -123,6 +153,8 @@ const Chat = () => {
       }, 100);
     } catch (error) {
       console.error("Chat initialization error:", error);
+      setToastMessage("Failed to load chat");
+      setShowToast(true);
     } finally {
       setIsLoading(false);
     }
@@ -160,20 +192,29 @@ const Chat = () => {
             onPress={() => router.back()}
             className="bg-gray-50 p-2 rounded-xl mr-4"
           >
-            <Ionicons name="arrow-back" size={24} color="#4a3b6b" />
+            <Ionicons name="chevron-back" size={24} color="#4a3b6b" />
           </TouchableOpacity>
-          <Image
-            source={{ uri: params.avatar || "https://via.placeholder.com/40" }}
-            className="w-10 h-10 rounded-full bg-gray-200"
-          />
-          <View className="ml-3 flex-1">
-            <Text className="text-lg font-pbold text-gray-900">
-              {params.name}
-            </Text>
-            <Text className="text-sm font-pmedium text-gray-500">
-              {messages.length > 0 ? "Active now" : "Start a conversation"}
-            </Text>
-          </View>
+          {otherUser && (
+            <>
+              {otherUser.avatar ? (
+                <Image
+                  source={{ uri: otherUser.avatar }}
+                  className="w-10 h-10 rounded-full bg-gray-200"
+                />
+              ) : (
+                <View className="w-10 h-10 rounded-full bg-violet-100 items-center justify-center">
+                  <Text className="text-lg font-pbold text-violet-600">
+                    {otherUser.name?.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+              )}
+              <View className="ml-3 flex-1">
+                <Text className="text-lg font-pbold text-gray-900">
+                  {otherUser.name}
+                </Text>
+              </View>
+            </>
+          )}
         </View>
       </View>
 
@@ -198,15 +239,19 @@ const Chat = () => {
                   msg.sender_id === user.id ? "justify-end" : "justify-start"
                 } mb-3`}
               >
-                {msg.sender_id !== user.id && (
-                  <Image
-                    source={{
-                      uri:
-                        msg.sender?.avatar || "https://via.placeholder.com/32",
-                    }}
-                    className="w-8 h-8 rounded-full mr-2 mt-1"
-                  />
-                )}
+                {msg.sender_id !== user.id &&
+                  (msg.sender?.avatar ? (
+                    <Image
+                      source={{ uri: msg.sender.avatar }}
+                      className="w-8 h-8 rounded-full mr-2 mt-1"
+                    />
+                  ) : (
+                    <View className="w-8 h-8 rounded-full bg-violet-100 mr-2 mt-1 items-center justify-center">
+                      <Text className="text-sm font-pbold text-violet-600">
+                        {msg.sender?.name?.charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+                  ))}
                 <View
                   className={`${
                     msg.sender_id === user.id ? "bg-violet-600" : "bg-white"
