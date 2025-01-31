@@ -88,40 +88,58 @@ const FriendRequestCard = ({ request, onAccept, onDecline }) => (
       elevation: 4,
     }}
   >
-    <View className="flex-row items-center mb-4">
+    <View className="flex-row items-center mb-3">
       {request.avatar ? (
         <Image
           source={{ uri: request.avatar }}
-          className="w-12 h-12 rounded-full"
+          className="w-14 h-14 rounded-full"
         />
       ) : (
-        <View className="w-12 h-12 rounded-full bg-violet-200 items-center justify-center">
-          <Text className="text-violet-700 font-pbold text-lg">
+        <View className="w-14 h-14 rounded-full bg-violet-100 items-center justify-center">
+          <Text className="text-violet-700 font-pbold text-xl">
             {request.name?.charAt(0).toUpperCase()}
           </Text>
         </View>
       )}
-      <View className="ml-3">
-        <Text className="text-gray-800 font-psemibold text-base">
-          {request.name}
-        </Text>
-        <Text className="text-gray-500 font-plight">
-          {request.mutualFriends} mutual friends
+
+      <View className="ml-3 flex-1">
+        <View className="flex-row items-center justify-between">
+          <Text className="text-gray-900 font-pbold text-lg">
+            {request.name}
+          </Text>
+          <Text className="text-gray-500 font-pmedium">{request.age} y/o</Text>
+        </View>
+        <Text
+          className="text-gray-500 font-pmedium text-sm mt-0.5"
+          numberOfLines={2}
+        >
+          {request.bio}
         </Text>
       </View>
     </View>
-    <View className="flex-row">
+
+    <View className="flex-row flex-wrap gap-2 mb-4">
+      {request.interests?.map((interest, index) => (
+        <View key={index} className="bg-violet-50 px-3 py-1 rounded-full">
+          <Text className="text-violet-600 font-pmedium text-sm">
+            {interest}
+          </Text>
+        </View>
+      ))}
+    </View>
+
+    <View className="flex-row gap-2">
       <TouchableOpacity
-        className="flex-1 bg-violet-600 py-2.5 rounded-xl mr-2"
+        className="flex-1 bg-violet-600 py-2.5 rounded-xl"
         onPress={() => onAccept(request)}
       >
-        <Text className="text-white font-pmedium text-center">Accept</Text>
+        <Text className="text-white font-pbold text-center">Accept</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        className="flex-1 py-2.5 rounded-xl border border-red-500"
+        className="flex-1 bg-white py-2.5 rounded-xl border border-red-500"
         onPress={() => onDecline(request)}
       >
-        <Text className="text-red-500 font-pmedium text-center">Decline</Text>
+        <Text className="text-red-500 font-pbold text-center">Decline</Text>
       </TouchableOpacity>
     </View>
   </View>

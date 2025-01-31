@@ -11,21 +11,15 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import { supabase } from "@/lib/supabase";
+import { updateProfile } from "@/lib/supabase";
 import Toast from "@/components/Toast";
 import { useUserContext } from "@/context/userContextProvider";
+import * as FileSystem from "expo-file-system";
 
 const EditProfile = () => {
   const router = useRouter();
   const { user, fetchUser } = useUserContext();
-  const [profileData, setProfileData] = useState({
-    name: "",
-    avatar: "",
-    email: "",
-    phone: "",
-    description: "",
-    location: "",
-  });
+  const [profileData, setProfileData] = useState(null);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
@@ -37,7 +31,6 @@ const EditProfile = () => {
         email: user.email || "",
         phone: user.phone_number || "",
         description: user.description || "",
-        location: user.location || "",
       });
     }
   }, [user]);
@@ -54,30 +47,45 @@ const EditProfile = () => {
 
   const pickImage = async () => {
     try {
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission needed",
+          "Please grant permission to access your photos"
+        );
+        return;
+      }
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 1,
-        base64: true,
+        quality: 0.8,
       });
 
       if (!result.canceled && result.assets && result.assets[0]) {
-        const newAvatar = {
-          base64: result.assets[0].base64,
-          uri: result.assets[0].uri,
-        };
+        const img = result.assets[0];
+        const base64 = await FileSystem.readAsStringAsync(img.uri, {
+          encoding: "base64",
+        });
 
-        // Upload image and get public URL
-        const publicUrl = await supabase.uploadAvatarImage(newAvatar);
+        const filePath = `avatar-${user.id}-${Date.now()}.jpg`;
+        const contentType = "image/jpeg";
 
-        // Update local state
         setProfileData((prev) => ({
           ...prev,
-          avatar: publicUrl,
+          avatar: {
+            img,
+            base64,
+            filePath,
+            contentType,
+          },
         }));
       }
     } catch (error) {
+      console.log("error", error);
       Alert.alert("Error", "Failed to update profile picture");
     }
   };
@@ -89,20 +97,7 @@ const EditProfile = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from("users")
-        .update({
-          name: profileData.name,
-          email: profileData.email,
-          phone_number: profileData.phone,
-          description: profileData.description,
-          location: profileData.location,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", user.id);
-
-      if (error) throw error;
-
+      await updateProfile(profileData);
       await fetchUser(); // Refresh user context
       setToastMessage("Profile updated successfully!");
       setShowToast(true);
@@ -115,6 +110,10 @@ const EditProfile = () => {
       Alert.alert("Error", "Failed to update profile");
     }
   };
+
+  if (!profileData) {
+    return <Text>Loading...</Text>;
+  }
 
   return (
     <View className="flex-1 bg-white">
@@ -140,7 +139,9 @@ const EditProfile = () => {
             <View className="relative">
               <Image
                 source={{
-                  uri: profileData.avatar || "https://via.placeholder.com/150",
+                  uri:
+                    profileData?.avatar?.img?.uri ||
+                    "https://via.placeholder.com/150",
                 }}
                 className="w-24 h-24 rounded-full bg-gray-100"
               />
@@ -207,19 +208,6 @@ const EditProfile = () => {
                 multiline
                 numberOfLines={4}
                 placeholder="Tell us about yourself"
-              />
-            </View>
-
-            {/* Location Input */}
-            <View>
-              <Text className="text-gray-700 font-pmedium mb-2">Location</Text>
-              <TextInput
-                className="bg-gray-50 rounded-xl p-4 text-gray-800 font-pmedium"
-                value={profileData.location}
-                onChangeText={(text) =>
-                  setProfileData((prev) => ({ ...prev, location: text }))
-                }
-                placeholder="Enter your location"
               />
             </View>
           </View>
