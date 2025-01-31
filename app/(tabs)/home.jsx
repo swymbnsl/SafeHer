@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Share } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Share,
+  Linking,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -336,6 +343,28 @@ const Home = () => {
                     </View>
                   </View>
                 )}
+
+                {/* SOS Button Section */}
+                <View className="mt-3 pt-3 border-t border-gray-100">
+                  <TouchableOpacity
+                    onPress={() => {
+                      Linking.openURL("tel:1091");
+                      setToastMessage("Calling Women Helpline...");
+                      setShowToast(true);
+                    }}
+                    className="bg-red-100 p-4 rounded-xl flex-row items-center justify-center"
+                    accessibilityLabel="Emergency SOS button to call women helpline"
+                    accessibilityRole="button"
+                  >
+                    <Ionicons name="alert-circle" size={24} color="#DC2626" />
+                    <Text className="text-red-600 font-pbold ml-2 text-lg">
+                      SOS - Women Helpline
+                    </Text>
+                  </TouchableOpacity>
+                  <Text className="text-xs text-gray-500 text-center mt-2">
+                    Press to instantly call Women Helpline (1091)
+                  </Text>
+                </View>
               </View>
             </View>
           </View>

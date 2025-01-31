@@ -22,6 +22,8 @@ const MyTrips = () => {
   const [selectedTripId, setSelectedTripId] = useState(null);
   const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   const handleDeleteTrip = (tripId) => {
     setSelectedTripId(tripId);
