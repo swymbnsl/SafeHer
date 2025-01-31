@@ -37,7 +37,7 @@ const MyTrips = () => {
       setIsDeleteModalVisible(false);
     } catch (error) {
       // We'll handle this error in a separate modal in a future update
-      console.error("Failed to delete trip:", error);
+      console.log("Failed to delete trip:", error);
     }
   };
 
@@ -73,7 +73,7 @@ const MyTrips = () => {
           const trips = await getUserTrips();
           setUserTrips(trips);
         } catch (error) {
-          console.error("Failed to load trips:", error);
+          console.log("Failed to load trips:", error);
           setErrorMessage("Failed to load trips");
           setIsErrorModalVisible(true);
         } finally {

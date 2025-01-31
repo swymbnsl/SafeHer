@@ -22,28 +22,20 @@ const EditProfile = () => {
   const [profileData, setProfileData] = useState(null);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [interestInput, setInterestInput] = useState("");
 
   useEffect(() => {
     if (user) {
       setProfileData({
         name: user.name || "",
-        avatar: user.avatar || "",
+        avatar: user.avatar || null,
         email: user.email || "",
         phone: user.phone_number || "",
         description: user.description || "",
+        interests: user.interests || [],
       });
     }
   }, [user]);
-
-  const requestPermissions = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(
-        "Permission needed",
-        "Please grant permission to access your photos"
-      );
-    }
-  };
 
   const pickImage = async () => {
     try {
@@ -109,6 +101,28 @@ const EditProfile = () => {
     } catch (error) {
       Alert.alert("Error", "Failed to update profile");
     }
+  };
+
+  const handleAddInterest = () => {
+    if (interestInput.trim()) {
+      const newInterest = interestInput.trim();
+      if (!profileData.interests.includes(newInterest)) {
+        setProfileData((prev) => ({
+          ...prev,
+          interests: [...prev.interests, newInterest],
+        }));
+      }
+      setInterestInput("");
+    }
+  };
+
+  const handleRemoveInterest = (interestToRemove) => {
+    setProfileData((prev) => ({
+      ...prev,
+      interests: prev.interests.filter(
+        (interest) => interest !== interestToRemove
+      ),
+    }));
   };
 
   if (!profileData) {
@@ -209,6 +223,47 @@ const EditProfile = () => {
                 numberOfLines={4}
                 placeholder="Tell us about yourself"
               />
+            </View>
+
+            {/* Interests Input */}
+            <View>
+              <Text className="text-gray-700 font-pmedium mb-2">Interests</Text>
+              <View className="flex-row items-center space-x-2 mb-3">
+                <TextInput
+                  className="flex-1 bg-gray-50 rounded-xl p-4 text-gray-800 font-pmedium"
+                  placeholder="Add an interest"
+                  value={interestInput}
+                  onChangeText={setInterestInput}
+                  onSubmitEditing={handleAddInterest}
+                  returnKeyType="done"
+                />
+                <TouchableOpacity
+                  onPress={handleAddInterest}
+                  className="bg-violet-600 p-4 rounded-xl"
+                >
+                  <Ionicons name="add" size={24} color="white" />
+                </TouchableOpacity>
+              </View>
+
+              <View className="flex-row flex-wrap gap-2">
+                {profileData.interests.map((interest) => (
+                  <View
+                    key={interest}
+                    className="bg-violet-600 px-4 py-2 rounded-full flex-row items-center"
+                  >
+                    <Text className="text-white font-pbold mr-2">
+                      {interest}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => handleRemoveInterest(interest)}
+                      className="p-1"
+                      accessibilityLabel={`Remove ${interest}`}
+                    >
+                      <Ionicons name="close-circle" size={16} color="white" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
             </View>
           </View>
 

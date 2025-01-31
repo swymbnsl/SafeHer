@@ -55,6 +55,7 @@ const Profile = () => {
     totalTrips: 0,
     friends: 0,
     recentTrips: [],
+    interests: [],
   });
   const [refreshing, setRefreshing] = useState(false);
   const [blinkOpacity] = useState(new Animated.Value(1));
@@ -121,9 +122,10 @@ const Profile = () => {
         totalTrips: tripCount,
         friends: userFriends.length,
         recentTrips,
+        interests: userData.interests || [],
       });
     } catch (error) {
-      console.error("Error loading profile:", error);
+      console.log("Error loading profile:", error);
       Alert.alert("Error", "Failed to load profile data");
     }
   };
@@ -279,6 +281,27 @@ const Profile = () => {
               </Text>
             </View>
           </View>
+
+          {/* Add Interests section after Personal Info */}
+          {profile.interests.length > 0 && (
+            <View className="mb-6">
+              <Text className="text-lg font-psemibold text-gray-800 mb-4">
+                Interests
+              </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {profile.interests.map((interest) => (
+                  <View
+                    key={interest}
+                    className="bg-violet-100 px-4 py-2 rounded-full"
+                  >
+                    <Text className="text-violet-600 font-pbold">
+                      {interest}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
 
           {/* Recent Trips Section */}
           <View className="px-6">

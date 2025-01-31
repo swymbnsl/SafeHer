@@ -65,7 +65,7 @@ const Home = () => {
         // Load trips
         await loadTrips();
       } catch (error) {
-        console.error("Error initializing screen:", error);
+        console.log("Error initializing screen:", error);
         setToastMessage(error.message || "Failed to initialize screen");
         setShowToast(true);
       }
@@ -92,7 +92,7 @@ const Home = () => {
 
       setActiveTrips(tripsData);
     } catch (error) {
-      console.error("Error loading trips:", error.message);
+      console.log("Error loading trips:", error.message);
       setToastMessage(error.message || "Failed to load trips data");
       setShowToast(true);
       setActiveTrips([]); // Set empty array as fallback
@@ -141,7 +141,7 @@ const Home = () => {
         setShowToast(true);
       }
     } catch (error) {
-      console.error("Location sharing error:", error);
+      console.log("Location sharing error:", error);
       setToastMessage(error.message || "Failed to update location sharing");
       setShowToast(true);
       setIsSharing(false);
@@ -157,7 +157,7 @@ const Home = () => {
         url: shareUrl, // iOS only
       });
     } catch (error) {
-      console.error("Error sharing:", error);
+      console.log("Error sharing:", error);
       setToastMessage("Failed to share location link");
       setShowToast(true);
     }

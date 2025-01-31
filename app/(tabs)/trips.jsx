@@ -62,7 +62,7 @@ const Trips = () => {
         setTrips(tripsWithDistance);
         setFilteredTrips(tripsWithDistance);
       } catch (error) {
-        console.error("Failed to load trips:", error);
+        console.log("Failed to load trips:", error);
         setToastMessage("Failed to load trips");
         setShowToast(true);
       } finally {
@@ -196,7 +196,7 @@ const Trips = () => {
       setTrips(tripsWithDistance);
       setFilteredTrips(tripsWithDistance);
     } catch (error) {
-      console.error("Failed to refresh trips:", error);
+      console.log("Failed to refresh trips:", error);
       setToastMessage("Failed to refresh trips");
       setShowToast(true);
     } finally {

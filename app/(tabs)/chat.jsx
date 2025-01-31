@@ -32,7 +32,6 @@ const Chat = () => {
   const [otherUser, setOtherUser] = useState(null);
   const scrollViewRef = useRef();
   const subscriptionRef = useRef(null);
-  console.log("params", params);
   useEffect(() => {
     initializeChat();
     return () => {
@@ -54,7 +53,7 @@ const Chat = () => {
       });
       if (error) throw error;
     } catch (error) {
-      console.error("Error marking messages as read:", error);
+      console.log("Error marking messages as read:", error);
     }
   };
 
@@ -152,7 +151,7 @@ const Chat = () => {
         scrollViewRef.current?.scrollToEnd({ animated: false });
       }, 100);
     } catch (error) {
-      console.error("Chat initialization error:", error);
+      console.log("Chat initialization error:", error);
       setToastMessage("Failed to load chat");
       setShowToast(true);
     } finally {
@@ -174,7 +173,7 @@ const Chat = () => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
     } catch (error) {
-      console.error("Send message error:", error);
+      console.log("Send message error:", error);
       // Optionally show error to user
     }
   };

@@ -80,7 +80,7 @@ const NewTrip = () => {
         const data = await response.json();
         setLocationSuggestions(data.predictions);
       } catch (error) {
-        console.error("Error fetching locations:", error);
+        console.log("Error fetching locations:", error);
       }
     }, 500); // Wait 500ms after last keystroke
 
@@ -103,13 +103,13 @@ const NewTrip = () => {
           coordinates: { lat, lng },
         }));
       } else {
-        console.error("Invalid place details response:", data);
+        console.log("Invalid place details response:", data);
       }
 
       setShowSuggestions(false);
       setLocationSuggestions([]);
     } catch (error) {
-      console.error("Error fetching place details:", error);
+      console.log("Error fetching place details:", error);
     }
   };
 

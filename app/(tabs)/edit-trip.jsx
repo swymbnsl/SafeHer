@@ -67,7 +67,7 @@ const EditTrip = () => {
           interests: parsedTripData.interests || [],
         });
       } catch (error) {
-        console.error("Error parsing trip data:", error);
+        console.log("Error parsing trip data:", error);
         setError("Failed to load trip data");
       }
     }
@@ -99,7 +99,7 @@ const EditTrip = () => {
         const data = await response.json();
         setLocationSuggestions(data.predictions);
       } catch (error) {
-        console.error("Error fetching locations:", error);
+        console.log("Error fetching locations:", error);
       }
     }, 500);
 
@@ -126,7 +126,7 @@ const EditTrip = () => {
       setShowSuggestions(false);
       setLocationSuggestions([]);
     } catch (error) {
-      console.error("Error fetching place details:", error);
+      console.log("Error fetching place details:", error);
     }
   };
 
@@ -272,7 +272,7 @@ const EditTrip = () => {
         router.replace("/(tabs)/my-trips");
       }, 1500);
     } catch (error) {
-      console.error("Update error:", error);
+      console.log("Update error:", error);
       setError("Failed to update trip");
     }
   };

@@ -271,7 +271,6 @@ const Friends = () => {
             getFriends(),
             getFriendRequests(),
           ]);
-          console.log("friendsData", friendsData);
           setFriends(friendsData);
           setFriendRequests(requestsData);
         } catch (error) {

@@ -76,12 +76,12 @@ const VerificationScreen = () => {
             ...documents,
           });
         } catch (error) {
-          console.error("Error processing image:", error);
+          console.log("Error processing image:", error);
           setError("Failed to process image");
         }
       }
     } catch (error) {
-      console.error("Error picking image:", error);
+      console.log("Error picking image:", error);
       setError("Failed to pick image");
     }
   };
@@ -108,7 +108,7 @@ const VerificationScreen = () => {
         ]
       );
     } catch (error) {
-      console.error("Submission error:", error);
+      console.log("Submission error:", error);
       Alert.alert(
         "Error",
         "Failed to submit verification documents. Please try again."

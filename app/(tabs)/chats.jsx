@@ -104,7 +104,7 @@ const Chats = () => {
     try {
       await Promise.all([loadConversations(), loadFriends()]);
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.log("Error loading data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -121,14 +121,12 @@ const Chats = () => {
         }))
       );
     } catch (error) {
-      console.error("Error loading friends:", error);
+      console.log("Error loading friends:", error);
     }
   };
 
   const loadConversations = async () => {
     try {
-      console.log("Loading conversations for user:", user.id);
-
       const { data: conversationsData, error } = await supabase
         .from("conversations")
         .select(
@@ -147,8 +145,6 @@ const Chats = () => {
 
       if (error) throw error;
 
-      console.log("Fetched conversations:", conversationsData);
-
       // Get all unique participant IDs except current user
       const participantIds = [
         ...new Set(
@@ -157,8 +153,6 @@ const Chats = () => {
           )
         ),
       ];
-
-      console.log("Unique participant IDs:", participantIds);
 
       // Fetch user details for all participants
       const { data: participants } = await supabase
@@ -193,14 +187,12 @@ const Chats = () => {
           isOnline: false, // Implement online status if needed
         };
 
-        console.log("Formatted conversation:", formattedConv);
         return formattedConv;
       });
 
-      console.log("Setting conversations:", formattedConversations);
       setConversations(formattedConversations);
     } catch (error) {
-      console.error("Error loading conversations:", error);
+      console.log("Error loading conversations:", error);
     }
   };
 

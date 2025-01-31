@@ -47,7 +47,7 @@ const ActiveTripCard = ({
         } = await supabase.auth.getSession();
         setIsPending(recipient?.friend_requests?.includes(session?.user?.id));
       } catch (error) {
-        console.error("Error checking request status:", error);
+        console.log("Error checking request status:", error);
       }
     };
 
