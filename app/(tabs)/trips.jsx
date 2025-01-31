@@ -107,47 +107,51 @@ const Trips = () => {
 
   // Apply filters whenever filters or trips change
   useEffect(() => {
-    const filtered = trips.filter((trip) => {
-      // Distance filter
-      const tripDistance =
-        typeof trip.distance === "string"
-          ? parseFloat(trip.distance.replace(/[^\d.]/g, ""))
-          : parseFloat(trip.distance);
+    const filtered = trips
+      .filter((trip) => trip.created_by !== user?.id)
+      .filter((trip) => {
+        // Distance filter
+        const tripDistance =
+          typeof trip.distance === "string"
+            ? parseFloat(trip.distance.replace(/[^\d.]/g, ""))
+            : parseFloat(trip.distance);
 
-      const minDist = filters.minDistance ? parseFloat(filters.minDistance) : 0;
-      const maxDist = filters.maxDistance
-        ? parseFloat(filters.maxDistance)
-        : Infinity;
+        const minDist = filters.minDistance
+          ? parseFloat(filters.minDistance)
+          : 0;
+        const maxDist = filters.maxDistance
+          ? parseFloat(filters.maxDistance)
+          : Infinity;
 
-      // Skip distance filtering if both min and max are empty
-      if (!filters.minDistance && !filters.maxDistance) {
-        // Only apply age filter
-      } else if (
-        isNaN(tripDistance) ||
-        tripDistance < minDist ||
-        tripDistance > maxDist
-      ) {
-        return false;
-      }
-
-      // Age Range filter
-      if (filters.ageRange !== "any") {
-        const posterAge = trip.users?.age;
-        if (!posterAge) return false;
-
-        if (filters.ageRange === "36+") {
-          if (posterAge < 36) return false;
-        } else {
-          const [minAge, maxAge] = filters.ageRange.split("-").map(Number);
-          if (posterAge < minAge || posterAge > maxAge) return false;
+        // Skip distance filtering if both min and max are empty
+        if (!filters.minDistance && !filters.maxDistance) {
+          // Only apply age filter
+        } else if (
+          isNaN(tripDistance) ||
+          tripDistance < minDist ||
+          tripDistance > maxDist
+        ) {
+          return false;
         }
-      }
 
-      return true;
-    });
+        // Age Range filter
+        if (filters.ageRange !== "any") {
+          const posterAge = trip.users?.age;
+          if (!posterAge) return false;
+
+          if (filters.ageRange === "36+") {
+            if (posterAge < 36) return false;
+          } else {
+            const [minAge, maxAge] = filters.ageRange.split("-").map(Number);
+            if (posterAge < minAge || posterAge > maxAge) return false;
+          }
+        }
+
+        return true;
+      });
 
     setFilteredTrips(filtered);
-  }, [trips, filters]);
+  }, [trips, filters, user?.id]);
 
   // Debug logging
   useEffect(() => {}, [filters, filteredTrips]);

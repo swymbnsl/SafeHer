@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Share } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -27,29 +27,28 @@ const Home = () => {
   useEffect(() => {
     loadTrips();
 
-    // Start sharing my location
-    const { stopSharing } = startSharingMyLocation();
-
-    // Cleanup on unmount
     return () => {
       if (locationInterval) {
         locationInterval();
-      }
-      if (stopSharing) {
-        stopSharing();
       }
     };
   }, []);
 
   const loadTrips = async () => {
     try {
-      // Get active trips
+      setIsLoadingTrips(true);
       const tripsData = await getActiveTrips();
+
+      if (!tripsData) {
+        throw new Error("No trips data received");
+      }
+
       setActiveTrips(tripsData);
     } catch (error) {
-      console.error("Error loading home data:", error);
-      setToastMessage("Failed to load data");
+      console.error("Error loading trips:", error.message);
+      setToastMessage(error.message || "Failed to load trips data");
       setShowToast(true);
+      setActiveTrips([]); // Set empty array as fallback
     } finally {
       setIsLoadingTrips(false);
     }
@@ -57,24 +56,62 @@ const Home = () => {
 
   const handleLocationSharing = async () => {
     try {
+      if (!user?.id) {
+        throw new Error("You must be logged in to share location");
+      }
+
       if (!isSharing) {
-        // Start sharing location
-        const { stopSharing } = await startSharingMyLocation();
-        setLocationInterval(stopSharing);
+        // Start location sharing and store the subscription
+        const subscription = startLocationSharing(user.id, async (location) => {
+          console.log("Location updated:", location);
+          // Handle location update if needed
+        });
+
+        // Start the location updates
+        const stopSharingFn = await startSharingMyLocation();
+
+        setLocationInterval(() => {
+          // Cleanup function that handles both the subscription and interval
+          return async () => {
+            subscription.unsubscribe();
+            if (stopSharingFn) {
+              await stopSharingFn();
+            }
+          };
+        });
+
         setIsSharing(true);
+        setToastMessage("Location sharing started");
+        setShowToast(true);
       } else {
-        // Stop sharing location
+        // Stop sharing
         if (locationInterval) {
-          locationInterval();
+          await locationInterval();
           setLocationInterval(null);
         }
-        // Update location sharing status in database
-        await updateLocationSharingStatus(false);
         setIsSharing(false);
+        setToastMessage("Location sharing stopped");
+        setShowToast(true);
       }
     } catch (error) {
       console.error("Location sharing error:", error);
-      setToastMessage("Failed to update location sharing");
+      setToastMessage(error.message || "Failed to update location sharing");
+      setShowToast(true);
+      setIsSharing(false);
+      setLocationInterval(null);
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      const shareUrl = `${process.env.EXPO_PUBLIC_WEBPAGE_DOMAIN}/userId=${user?.id}`;
+      await Share.share({
+        message: `Track my location in real-time: ${shareUrl}`,
+        url: shareUrl, // iOS only
+      });
+    } catch (error) {
+      console.error("Error sharing:", error);
+      setToastMessage("Failed to share location link");
       setShowToast(true);
     }
   };
@@ -224,44 +261,81 @@ const Home = () => {
               Location Sharing
             </Text>
             <View className="bg-white p-4 rounded-xl shadow-sm">
-              <View className="flex-row items-center justify-between">
-                <View className="flex-row items-center">
-                  <View
-                    className={`p-2 rounded-full ${
-                      isSharing ? "bg-violet-100" : "bg-gray-100"
-                    }`}
-                  >
-                    <Ionicons
-                      name={isSharing ? "location" : "location-outline"}
-                      size={24}
-                      color={isSharing ? "#6D28D9" : "#4B5563"}
-                    />
-                  </View>
-                  <View className="ml-3">
-                    <Text className="font-pbold text-gray-800">
-                      {isSharing ? "Currently Sharing" : "Location Sharing Off"}
-                    </Text>
-                    <Text className="text-sm text-gray-500">
-                      {isSharing
-                        ? "Your location is visible to trip companions"
-                        : "Enable to share your location"}
-                    </Text>
+              <View className="flex-col">
+                {/* Top Row with Icon and Toggle */}
+                <View className="flex-row items-center justify-between mb-3">
+                  <View className="flex-row items-center flex-1 mr-3">
+                    <View
+                      className={`p-2 rounded-full ${
+                        isSharing ? "bg-violet-100" : "bg-gray-100"
+                      }`}
+                    >
+                      <Ionicons
+                        name={isSharing ? "location" : "location-outline"}
+                        size={24}
+                        color={isSharing ? "#6D28D9" : "#4B5563"}
+                      />
+                    </View>
+                    <View className="ml-3 flex-1">
+                      <Text className="font-pbold text-gray-800">
+                        {isSharing
+                          ? "Currently Sharing"
+                          : "Location Sharing Off"}
+                      </Text>
+                      <Text className="text-sm text-gray-500">
+                        {isSharing
+                          ? "Your location is visible to trip companions"
+                          : "Enable to share your location"}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={handleLocationSharing}
+                      className={`px-4 py-2 rounded-full ${
+                        isSharing ? "bg-violet-100" : "bg-gray-100"
+                      }`}
+                    >
+                      <Text
+                        className={`font-pmedium ${
+                          isSharing ? "text-violet-700" : "text-gray-600"
+                        }`}
+                      >
+                        {isSharing ? "Stop" : "Start"}
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
-                <TouchableOpacity
-                  onPress={handleLocationSharing}
-                  className={`px-4 py-2 rounded-full ${
-                    isSharing ? "bg-violet-100" : "bg-gray-100"
-                  }`}
-                >
-                  <Text
-                    className={`font-pmedium ${
-                      isSharing ? "text-violet-700" : "text-gray-600"
-                    }`}
-                  >
-                    {isSharing ? "Stop" : "Start"}
-                  </Text>
-                </TouchableOpacity>
+
+                {/* Sharable URL Section */}
+                {isSharing && (
+                  <View className="mt-2 pt-3 border-t border-gray-100">
+                    <View className="flex-row items-center justify-between mb-1">
+                      <Text className="text-sm text-gray-500 flex-1 mr-3">
+                        Share this link to let others track your location:
+                      </Text>
+                      <TouchableOpacity
+                        onPress={handleShare}
+                        className="bg-violet-100 px-3 py-1.5 rounded-full flex-row items-center"
+                      >
+                        <Ionicons
+                          name="share-outline"
+                          size={16}
+                          color="#6D28D9"
+                        />
+                        <Text className="text-violet-700 font-pmedium ml-1">
+                          Share
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                    <View className="bg-gray-50 p-3 rounded-lg mt-2">
+                      <Text
+                        className="text-sm text-violet-600 font-pmedium"
+                        numberOfLines={1}
+                      >
+                        {`${process.env.EXPO_PUBLIC_WEBPAGE_DOMAIN}/userId=${user?.id}`}
+                      </Text>
+                    </View>
+                  </View>
+                )}
               </View>
             </View>
           </View>
