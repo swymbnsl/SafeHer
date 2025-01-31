@@ -113,7 +113,7 @@ const Home = () => {
 
   const handleShare = async () => {
     try {
-      const shareUrl = `${process.env.EXPO_PUBLIC_WEBPAGE_DOMAIN}/userId=${user?.id}`;
+      const shareUrl = `${process.env.EXPO_PUBLIC_WEBPAGE_DOMAIN}/location?userId=${user?.id}`;
       await Share.share({
         message: `Track my location in real-time: ${shareUrl}`,
         url: shareUrl, // iOS only
@@ -361,7 +361,7 @@ const Home = () => {
                         className="text-sm text-violet-600 font-pmedium"
                         numberOfLines={1}
                       >
-                        {`${process.env.EXPO_PUBLIC_WEBPAGE_DOMAIN}/userId=${user?.id}`}
+                        {`${process.env.EXPO_PUBLIC_WEBPAGE_DOMAIN}/location?userId=${user?.id}`}
                       </Text>
                     </View>
                   </View>
