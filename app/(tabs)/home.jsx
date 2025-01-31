@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Share,
   Linking,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,7 +23,7 @@ import ActiveTripCard from "../../components/ActiveTripCard";
 import QuickActionButton from "../../components/QuickActionButton";
 
 const Home = () => {
-  const { user, isLoading } = useUserContext();
+  const { user, isLoading, fetchUser } = useUserContext();
   const [activeTrips, setActiveTrips] = useState([]);
   const [isLoadingTrips, setIsLoadingTrips] = useState(true);
   const [showToast, setShowToast] = useState(false);
@@ -30,6 +31,7 @@ const Home = () => {
   const router = useRouter();
   const [isSharing, setIsSharing] = useState(false);
   const [locationInterval, setLocationInterval] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadTrips();
@@ -123,6 +125,19 @@ const Home = () => {
     }
   };
 
+  const handleRequestSent = async (message) => {
+    setToastMessage(message);
+    setShowToast(true);
+    // Reload trips after request is sent
+    await loadTrips();
+  };
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchUser();
+    setRefreshing(false);
+  }, [fetchUser]);
+
   // Toast auto-hide effect
   useEffect(() => {
     if (showToast) {
@@ -174,7 +189,18 @@ const Home = () => {
         </View>
       </View>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor="#7C3AED"
+            colors={["#7C3AED"]}
+          />
+        }
+      >
         {/* Active Trips */}
         <View className="px-6 py-6">
           <View className="flex-row justify-between items-center mb-4">
@@ -220,10 +246,7 @@ const Home = () => {
                       age={user?.age}
                       createdBy={trip.created_by}
                       isFriend={user?.friends?.includes(trip.created_by)}
-                      onRequestSent={(message) => {
-                        setToastMessage(message);
-                        setShowToast(true);
-                      }}
+                      onRequestSent={handleRequestSent}
                     />
                   </View>
                 ))

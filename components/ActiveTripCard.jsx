@@ -3,8 +3,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { formatTripDuration } from "../utils/dateFormatters";
 import { calculateDistance } from "../utils/locationUtils";
 import { sendFriendRequest } from "../lib/supabase";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
+import { supabase } from "../lib/supabase";
 
 const DEFAULT_TRIP_IMAGE =
   "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRk_Xm-CUa-epUv5KYdea2WIAOozwkDtWUbaA&s";
@@ -29,7 +30,31 @@ const ActiveTripCard = ({
   hideActions = false,
 }) => {
   const [isRequesting, setIsRequesting] = useState(false);
+  const [isPending, setIsPending] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const checkRequestStatus = async () => {
+      try {
+        const { data: recipient } = await supabase
+          .from("users")
+          .select("friend_requests")
+          .eq("user_id", createdBy)
+          .single();
+
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        setIsPending(recipient?.friend_requests?.includes(session?.user?.id));
+      } catch (error) {
+        console.error("Error checking request status:", error);
+      }
+    };
+
+    if (createdBy) {
+      checkRequestStatus();
+    }
+  }, [createdBy]);
 
   const distanceText =
     userLocation && location?.coordinates
@@ -71,15 +96,31 @@ const ActiveTripCard = ({
       );
     }
 
+    const isDisabled = isPending || isRequesting;
+
     return (
       <TouchableOpacity
-        className="bg-violet-600 px-4 py-2 rounded-xl flex-row items-center"
+        className={`px-4 py-2 rounded-xl flex-row items-center justify-center ${
+          isDisabled ? "bg-gray-200 border border-gray-300" : "bg-violet-600"
+        }`}
         onPress={handleFriendRequest}
-        disabled={isRequesting}
+        disabled={isDisabled}
       >
-        <Ionicons name="person-add-outline" size={18} color="white" />
-        <Text className="text-white font-pmedium ml-2">
-          {isRequesting ? "Sending..." : "Add Friend"}
+        <Ionicons
+          name="person-add-outline"
+          size={18}
+          color={isDisabled ? "#9CA3AF" : "white"}
+        />
+        <Text
+          className={`font-pmedium ml-2 ${
+            isDisabled ? "text-gray-500" : "text-white"
+          }`}
+        >
+          {isPending
+            ? "Request Pending"
+            : isRequesting
+            ? "Sending..."
+            : "Add Friend"}
         </Text>
       </TouchableOpacity>
     );

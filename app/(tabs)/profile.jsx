@@ -23,6 +23,7 @@ import {
   getFriends,
   getUserTripCount,
 } from "@/lib/supabase";
+import ActiveTripCard from "@/components/ActiveTripCard";
 
 const StatCard = ({ icon, label, value }) => (
   <View
@@ -109,15 +110,8 @@ const Profile = () => {
       const userFriends = await getFriends();
       const tripCount = await getUserTripCount();
 
-      const recentTrips = userTrips.slice(0, 2).map((trip) => ({
-        name: trip.name,
-        date: new Date(trip.start_time).toLocaleDateString("en-US", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        }),
-        status: trip.status,
-      }));
+      // Get the first 5 trips
+      const recentTrips = userTrips.slice(0, 5);
 
       setProfile({
         name: userData.name,
@@ -286,45 +280,57 @@ const Profile = () => {
             </View>
           </View>
 
-          {/* Recent Trips */}
-          <Text className="text-lg font-psemibold text-gray-800 mb-4">
-            Recent Trips
-          </Text>
-          {profile.recentTrips.map((trip, index) => (
-            <View
-              key={index}
-              className="bg-white p-4 rounded-2xl mb-4"
-              style={{
-                shadowColor: "#7C3AED",
-                shadowOpacity: 0.1,
-                shadowRadius: 12,
-                shadowOffset: { width: 0, height: 4 },
-                elevation: 4,
-              }}
-            >
-              <Text className="text-gray-800 font-pbold">{trip.name}</Text>
-              <View className="flex-row justify-between items-center mt-2">
-                <Text className="text-gray-500 font-pmedium">{trip.date}</Text>
-                <View
-                  className={`px-3 py-1 rounded-full ${
-                    trip.status === "completed"
-                      ? "bg-green-100"
-                      : "bg-violet-100"
-                  }`}
-                >
-                  <Text
-                    className={`font-pmedium ${
-                      trip.status === "completed"
-                        ? "text-green-600"
-                        : "text-violet-600"
-                    }`}
-                  >
-                    {trip.status.charAt(0).toUpperCase() + trip.status.slice(1)}
-                  </Text>
-                </View>
-              </View>
+          {/* Recent Trips Section */}
+          <View className="px-6">
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-lg font-psemibold text-gray-800">
+                Recent Trips
+              </Text>
+              <TouchableOpacity
+                onPress={() => router.push("/my-trips")}
+                className="flex-row items-center"
+              >
+                <Text className="text-violet-600 font-pmedium mr-1">
+                  View all
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color="#7C3AED" />
+              </TouchableOpacity>
             </View>
-          ))}
+
+            {profile.recentTrips.length > 0 ? (
+              profile.recentTrips.map((trip) => (
+                <View key={trip.id} className="mb-4">
+                  <ActiveTripCard
+                    name={trip.name}
+                    posterName={trip.users.name}
+                    posterAvatar={trip.users.avatar}
+                    posterInterests={trip.desired_interests}
+                    start_time={trip.start_time}
+                    end_time={trip.end_time}
+                    distance={trip.distance}
+                    companions={trip.max_companions}
+                    image={trip.image}
+                    coordinates={trip.location}
+                    fullWidth={true}
+                    hideActions={true}
+                    onPress={() => router.push(`/trip/${trip.id}`)}
+                  />
+                </View>
+              ))
+            ) : (
+              <View className="py-8 items-center">
+                <Text className="text-gray-500 font-pmedium text-center">
+                  You haven't created any trips yet
+                </Text>
+                <TouchableOpacity
+                  className="mt-4 bg-violet-600 px-6 py-3 rounded-xl"
+                  onPress={() => router.push("/(tabs)/new-trip")}
+                >
+                  <Text className="text-white font-pmedium">Create a Trip</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
         </View>
         <View className="px-6 pb-20">
           <TouchableOpacity

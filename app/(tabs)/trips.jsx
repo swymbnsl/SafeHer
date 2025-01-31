@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TextInput,
   Modal,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colours";
@@ -28,6 +29,7 @@ const Trips = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
 
   // Initial filters state
   const [filters, setFilters] = useState({
@@ -166,6 +168,42 @@ const Trips = () => {
     }
   }, [showToast]);
 
+  const handleRequestSent = async (message) => {
+    setToastMessage(message);
+    setShowToast(true);
+    // Reload trips after request is sent
+    await loadTrips();
+  };
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const fetchedTrips = await getActiveTrips();
+      // Calculate distance for each trip
+      const tripsWithDistance = fetchedTrips.map((trip) => {
+        let distance = 0;
+        if (user?.location && trip.location?.coordinates) {
+          distance = calculateDistance(
+            user.location.latitude,
+            user.location.longitude,
+            trip.location.coordinates.latitude,
+            trip.location.coordinates.longitude
+          );
+        }
+        return { ...trip, distance };
+      });
+
+      setTrips(tripsWithDistance);
+      setFilteredTrips(tripsWithDistance);
+    } catch (error) {
+      console.error("Failed to refresh trips:", error);
+      setToastMessage("Failed to refresh trips");
+      setShowToast(true);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [user?.location]);
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       {/* Fixed Header */}
@@ -182,7 +220,18 @@ const Trips = () => {
       </View>
 
       {/* Scrollable Content */}
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor="#7C3AED"
+            colors={["#7C3AED"]}
+          />
+        }
+      >
         <View className="px-6">
           {/* Search Bar */}
           <View className="mb-4">
@@ -253,6 +302,7 @@ const Trips = () => {
                     userLocation={user?.location}
                     age={user?.age}
                     fullWidth={true}
+                    onRequestSent={handleRequestSent}
                   />
                 </View>
               ))

@@ -10,6 +10,23 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { supabase, getFriends } from "@/lib/supabase";
+import { useUserContext } from "@/context/userContextProvider";
+
+const AvatarFallback = ({ name, size = 12 }) => (
+  <View
+    className={`w-${size} h-${size} rounded-full bg-violet-100 items-center justify-center`}
+  >
+    <Text className="text-violet-600 font-pmedium">
+      {name
+        ?.split(" ")
+        .map((word) => word[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)}
+    </Text>
+  </View>
+);
 
 const ChatPreview = ({ chat, onPress }) => (
   <TouchableOpacity
@@ -25,10 +42,14 @@ const ChatPreview = ({ chat, onPress }) => (
   >
     <View className="flex-row items-center">
       <View className="relative">
-        <Image
-          source={{ uri: chat.avatar }}
-          className="w-12 h-12 rounded-full"
-        />
+        {chat.avatar ? (
+          <Image
+            source={{ uri: chat.avatar }}
+            className="w-12 h-12 rounded-full"
+          />
+        ) : (
+          <AvatarFallback name={chat.name} />
+        )}
         {chat.isOnline && (
           <View className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
         )}
@@ -38,7 +59,9 @@ const ChatPreview = ({ chat, onPress }) => (
           <Text className="text-gray-800 font-psemibold text-base">
             {chat.name}
           </Text>
-          <Text className="text-gray-500 font-plight text-sm">{chat.time}</Text>
+          <Text className="text-gray-500 font-plight text-sm">
+            {chat.lastMessageTime}
+          </Text>
         </View>
         <View className="flex-row justify-between items-center mt-1">
           <Text
@@ -62,44 +85,203 @@ const ChatPreview = ({ chat, onPress }) => (
 
 const Chats = () => {
   const router = useRouter();
-  const chats = [
-    {
-      id: "1",
-      name: "Priya Sharma",
-      avatar: "https://randomuser.me/api/portraits/women/1.jpg",
-      lastMessage: "Sure, lets meet at the mall entrance",
-      time: "2m ago",
-      unreadCount: 2,
-      isOnline: true,
-    },
-    {
-      id: "2",
-      name: "Rahul Verma",
-      avatar: "https://randomuser.me/api/portraits/men/2.jpg",
-      lastMessage: "The trip was amazing!",
-      time: "1h ago",
-      unreadCount: 0,
-      isOnline: false,
-    },
-    {
-      id: "3",
-      name: "Anjali Gupta",
-      avatar: "https://randomuser.me/api/portraits/women/3.jpg",
-      lastMessage: "See you tomorrow at the event",
-      time: "3h ago",
-      unreadCount: 1,
-      isOnline: true,
-    },
-  ];
+  const { user } = useUserContext();
+  const [conversations, setConversations] = React.useState([]);
+  const [friends, setFriends] = React.useState([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [showAllFriends, setShowAllFriends] = React.useState(false);
+
+  React.useEffect(() => {
+    loadData();
+    subscribeToMessages();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      await Promise.all([loadConversations(), loadFriends()]);
+    } catch (error) {
+      console.error("Error loading data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadFriends = async () => {
+    try {
+      const friendsData = await getFriends();
+      setFriends(
+        friendsData.map((friend) => ({
+          id: friend.id,
+          name: friend.name,
+          avatar: friend.avatar,
+        }))
+      );
+    } catch (error) {
+      console.error("Error loading friends:", error);
+    }
+  };
+
+  const loadConversations = async () => {
+    try {
+      console.log("Loading conversations for user:", user.id);
+
+      const { data: conversationsData, error } = await supabase
+        .from("conversations")
+        .select(
+          `
+          *,
+          messages:messages (
+            content,
+            created_at,
+            sender_id,
+            read_by
+          )
+        `
+        )
+        .contains("participants", [user.id])
+        .order("updated_at", { ascending: false });
+
+      if (error) throw error;
+
+      console.log("Fetched conversations:", conversationsData);
+
+      // Get all unique participant IDs except current user
+      const participantIds = [
+        ...new Set(
+          conversationsData.flatMap((conv) =>
+            conv.participants.filter((id) => id !== user.id)
+          )
+        ),
+      ];
+
+      console.log("Unique participant IDs:", participantIds);
+
+      // Fetch user details for all participants
+      const { data: participants } = await supabase
+        .from("users")
+        .select("user_id, name, avatar")
+        .in("user_id", participantIds);
+
+      console.log("Fetched participant details:", participants);
+
+      // Format conversations with latest message and user details
+      const formattedConversations = conversationsData.map((conv) => {
+        const otherParticipant = participants?.find(
+          (p) => conv.participants.includes(p.user_id) && p.user_id !== user.id
+        );
+        const latestMessage = conv.messages[conv.messages.length - 1];
+        const unreadCount = conv.messages.filter(
+          (msg) => msg.sender_id !== user.id && !msg.read_by.includes(user.id)
+        ).length;
+
+        const formattedConv = {
+          id: conv.id,
+          name: otherParticipant?.name || "Unknown",
+          avatar: otherParticipant?.avatar || "https://via.placeholder.com/150",
+          lastMessage: latestMessage?.content || "No messages yet",
+          lastMessageTime: latestMessage
+            ? new Date(latestMessage.created_at).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "",
+          unreadCount,
+          isOnline: false, // Implement online status if needed
+        };
+
+        console.log("Formatted conversation:", formattedConv);
+        return formattedConv;
+      });
+
+      console.log("Setting conversations:", formattedConversations);
+      setConversations(formattedConversations);
+    } catch (error) {
+      console.error("Error loading conversations:", error);
+    }
+  };
+
+  const subscribeToMessages = () => {
+    const subscription = supabase
+      .channel("public:messages")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "messages",
+        },
+        () => {
+          loadConversations(); // Reload conversations when messages change
+        }
+      )
+      .subscribe();
+
+    return () => subscription.unsubscribe();
+  };
+
+  const FriendsList = () => (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      className="pt-4 pb-2 ml-5"
+    >
+      {friends.map((friend) => (
+        <TouchableOpacity
+          key={friend.id}
+          className="items-center mx-1 w-14"
+          onPress={() =>
+            router.push({
+              pathname: "/(tabs)/chat",
+              params: {
+                name: friend.name,
+                id: friend.id,
+                type: "friend",
+              },
+            })
+          }
+        >
+          <View className="relative">
+            {friend.avatar ? (
+              <Image
+                source={{ uri: friend.avatar }}
+                className="w-12 h-12 rounded-full"
+              />
+            ) : (
+              <AvatarFallback name={friend.name} />
+            )}
+          </View>
+          <Text
+            numberOfLines={1}
+            className="text-xs text-gray-600 mt-1 text-center"
+          >
+            {friend.name}
+          </Text>
+        </TouchableOpacity>
+      ))}
+      <TouchableOpacity
+        className="items-center justify-center mx-3 w-14"
+        onPress={() => router.push("/(tabs)/friends")}
+      >
+        <View className="w-12 h-12 rounded-full bg-violet-100 items-center justify-center">
+          <Ionicons name="add" size={24} color="#7C3AED" />
+        </View>
+        <Text className="text-xs text-gray-600 mt-1 text-center">Add New</Text>
+      </TouchableOpacity>
+    </ScrollView>
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <View className="px-6 pt-2 pb-4 bg-white">
         <View className="flex-row items-center justify-between">
           <Text className="text-2xl font-pbold text-gray-900">Messages</Text>
-          <TouchableOpacity className="relative">
+          <TouchableOpacity onPress={() => setShowAllFriends(!showAllFriends)}>
             <View className="w-10 h-10 bg-gray-50 rounded-full items-center justify-center">
-              <Ionicons name="create-outline" size={22} color="#7C3AED" />
+              <Ionicons
+                name={showAllFriends ? "chatbubbles-outline" : "people-outline"}
+                size={22}
+                color="#7C3AED"
+              />
             </View>
           </TouchableOpacity>
         </View>
@@ -115,19 +297,62 @@ const Chats = () => {
       </View>
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        {!showAllFriends && <FriendsList />}
+
         <View className="px-6 pt-4">
-          {chats.map((chat) => (
-            <ChatPreview
-              key={chat.id}
-              chat={chat}
-              onPress={() =>
-                router.push({
-                  pathname: "/(tabs)/chat",
-                  params: { name: chat.name, id: chat.id },
-                })
-              }
-            />
-          ))}
+          {isLoading ? (
+            <Text className="text-gray-500 text-center py-4">Loading...</Text>
+          ) : showAllFriends ? (
+            friends.length > 0 ? (
+              friends.map((friend) => (
+                <ChatPreview
+                  key={friend.id}
+                  chat={{
+                    ...friend,
+                    lastMessage: "Start a conversation",
+                    lastMessageTime: "",
+                    unreadCount: 0,
+                    isOnline: false,
+                  }}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(tabs)/chat",
+                      params: {
+                        name: friend.name,
+                        id: friend.id,
+                        type: "friend",
+                      },
+                    })
+                  }
+                />
+              ))
+            ) : (
+              <Text className="text-gray-500 text-center py-4">
+                No friends yet. Add some friends to start chatting!
+              </Text>
+            )
+          ) : conversations.length > 0 ? (
+            conversations.map((conversation) => (
+              <ChatPreview
+                key={conversation.id}
+                chat={conversation}
+                onPress={() =>
+                  router.push({
+                    pathname: "/(tabs)/chat",
+                    params: {
+                      name: conversation.name,
+                      id: conversation.id,
+                      type: "conversation",
+                    },
+                  })
+                }
+              />
+            ))
+          ) : (
+            <Text className="text-gray-500 text-center py-4">
+              No conversations yet. Start chatting with your friends!
+            </Text>
+          )}
         </View>
         <View className="h-20" />
       </ScrollView>
