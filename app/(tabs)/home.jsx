@@ -4,11 +4,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useUserContext } from "../../context/userContextProvider";
-import { getActiveTrips } from "../../lib/supabase";
+import {
+  getActiveTrips,
+  startSharingMyLocation,
+  startLocationSharing,
+  updateLocationSharingStatus,
+} from "../../lib/supabase";
 
 import ActiveTripCard from "../../components/ActiveTripCard";
 import QuickActionButton from "../../components/QuickActionButton";
-import RequestCard from "../../components/RequestCard";
 
 const Home = () => {
   const { user, isLoading } = useUserContext();
@@ -17,9 +21,24 @@ const Home = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const router = useRouter();
+  const [isSharing, setIsSharing] = useState(false);
+  const [locationInterval, setLocationInterval] = useState(null);
 
   useEffect(() => {
     loadTrips();
+
+    // Start sharing my location
+    const { stopSharing } = startSharingMyLocation();
+
+    // Cleanup on unmount
+    return () => {
+      if (locationInterval) {
+        locationInterval();
+      }
+      if (stopSharing) {
+        stopSharing();
+      }
+    };
   }, []);
 
   const loadTrips = async () => {
@@ -33,6 +52,30 @@ const Home = () => {
       setShowToast(true);
     } finally {
       setIsLoadingTrips(false);
+    }
+  };
+
+  const handleLocationSharing = async () => {
+    try {
+      if (!isSharing) {
+        // Start sharing location
+        const { stopSharing } = await startSharingMyLocation();
+        setLocationInterval(stopSharing);
+        setIsSharing(true);
+      } else {
+        // Stop sharing location
+        if (locationInterval) {
+          locationInterval();
+          setLocationInterval(null);
+        }
+        // Update location sharing status in database
+        await updateLocationSharingStatus(false);
+        setIsSharing(false);
+      }
+    } catch (error) {
+      console.error("Location sharing error:", error);
+      setToastMessage("Failed to update location sharing");
+      setShowToast(true);
     }
   };
 
@@ -59,13 +102,31 @@ const Home = () => {
               Ready for your next adventure?
             </Text>
           </View>
-          <TouchableOpacity
-            onPress={() => router.push("/notifications")}
-            className="relative p-2"
-          >
-            <Ionicons name="notifications-outline" size={24} color="#4B5563" />
-            <View className="absolute top-1 right-1 w-2.5 h-2.5 bg-violet-600 rounded-full" />
-          </TouchableOpacity>
+          <View className="flex-row items-center gap-x-2">
+            <TouchableOpacity
+              onPress={handleLocationSharing}
+              className={`p-2 rounded-full ${
+                isSharing ? "bg-violet-100" : "bg-gray-100"
+              }`}
+            >
+              <Ionicons
+                name={isSharing ? "location" : "location-outline"}
+                size={24}
+                color={isSharing ? "#6D28D9" : "#4B5563"}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => router.push("/notifications")}
+              className="relative p-2"
+            >
+              <Ionicons
+                name="notifications-outline"
+                size={24}
+                color="#4B5563"
+              />
+              <View className="absolute top-1 right-1 w-2.5 h-2.5 bg-violet-600 rounded-full" />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
@@ -157,30 +218,56 @@ const Home = () => {
             </View>
           </View>
 
-          {/* Recent Requests */}
-          <View>
+          {/* Location Sharing Status */}
+          <View className="mb-6">
             <Text className="text-xl font-pbold text-gray-800 mb-4">
-              Recent Requests
+              Location Sharing
             </Text>
-            {isLoading ? (
-              <Text className="text-gray-500">Loading requests...</Text>
-            ) : user?.requests?.length > 0 ? (
-              user.requests.map((request) => (
-                <RequestCard
-                  key={request.id}
-                  name={request.name}
-                  location={request.location}
-                  time={request.time}
-                  status={request.status}
-                />
-              ))
-            ) : (
-              <Text className="text-gray-500">No recent requests</Text>
-            )}
+            <View className="bg-white p-4 rounded-xl shadow-sm">
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center">
+                  <View
+                    className={`p-2 rounded-full ${
+                      isSharing ? "bg-violet-100" : "bg-gray-100"
+                    }`}
+                  >
+                    <Ionicons
+                      name={isSharing ? "location" : "location-outline"}
+                      size={24}
+                      color={isSharing ? "#6D28D9" : "#4B5563"}
+                    />
+                  </View>
+                  <View className="ml-3">
+                    <Text className="font-pbold text-gray-800">
+                      {isSharing ? "Currently Sharing" : "Location Sharing Off"}
+                    </Text>
+                    <Text className="text-sm text-gray-500">
+                      {isSharing
+                        ? "Your location is visible to trip companions"
+                        : "Enable to share your location"}
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  onPress={handleLocationSharing}
+                  className={`px-4 py-2 rounded-full ${
+                    isSharing ? "bg-violet-100" : "bg-gray-100"
+                  }`}
+                >
+                  <Text
+                    className={`font-pmedium ${
+                      isSharing ? "text-violet-700" : "text-gray-600"
+                    }`}
+                  >
+                    {isSharing ? "Stop" : "Start"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
-        </View>
 
-        <View className="h-20" />
+          <View className="h-20" />
+        </View>
       </ScrollView>
 
       {/* Toast Message */}
