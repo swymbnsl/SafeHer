@@ -26,6 +26,7 @@ const ActiveTripCard = ({
   createdBy,
   onRequestSent,
   isFriend = false,
+  hideActions = false,
 }) => {
   const [isRequesting, setIsRequesting] = useState(false);
   const router = useRouter();
@@ -200,7 +201,7 @@ const ActiveTripCard = ({
           </View>
         </View>
 
-        <View className="mt-4">{renderActionButton()}</View>
+        {!hideActions && <View className="mt-4">{renderActionButton()}</View>}
       </View>
     </TouchableOpacity>
   );

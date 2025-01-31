@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ActiveTripCard from "../../components/ActiveTripCard";
 import { getUserTrips, deleteTrip } from "../../lib/supabase";
+import { useFocusEffect } from "@react-navigation/native";
 
 const MyTrips = () => {
   const router = useRouter();
@@ -39,29 +40,48 @@ const MyTrips = () => {
   };
 
   const handleEditTrip = (trip) => {
+    // Format the trip data before navigation
+    const formattedTrip = {
+      id: trip.id,
+      name: trip.name,
+      location: trip.location,
+      date: new Date(trip.start_time),
+      time: new Date(trip.start_time),
+      companions: String(trip.max_companions),
+      description: trip.description || "",
+      interests: trip.desired_interests || [],
+      image: trip.image || null,
+      coordinates: trip.coordinates,
+    };
+
     router.push({
       pathname: "/(tabs)/edit-trip",
-      params: { tripId: trip.id },
+      params: {
+        tripId: trip.id,
+        tripData: JSON.stringify(formattedTrip),
+      },
     });
   };
 
-  useEffect(() => {
-    const loadUserTrips = async () => {
-      try {
-        setIsLoading(true);
-        const trips = await getUserTrips();
-        setUserTrips(trips);
-      } catch (error) {
-        console.error("Failed to load trips:", error);
-        setErrorMessage("Failed to load trips");
-        setIsErrorModalVisible(true);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  useFocusEffect(
+    useCallback(() => {
+      const loadUserTrips = async () => {
+        try {
+          setIsLoading(true);
+          const trips = await getUserTrips();
+          setUserTrips(trips);
+        } catch (error) {
+          console.error("Failed to load trips:", error);
+          setErrorMessage("Failed to load trips");
+          setIsErrorModalVisible(true);
+        } finally {
+          setIsLoading(false);
+        }
+      };
 
-    loadUserTrips();
-  }, []);
+      loadUserTrips();
+    }, [])
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -98,19 +118,26 @@ const MyTrips = () => {
                   image={trip.image}
                   coordinates={trip.location}
                   fullWidth={true}
+                  hideActions={true}
                 />
-                <View className="flex-row justify-end mt-2 space-x-2">
+                <View className="flex-row justify-evenly mt-3 gap-3 px-1">
                   <TouchableOpacity
-                    className="bg-violet-100 p-2 rounded-xl"
+                    className="flex-row items-center bg-violet-100 px-4 py-2.5 rounded-xl flex-1"
                     onPress={() => handleEditTrip(trip)}
                   >
-                    <Ionicons name="create-outline" size={20} color="#7C3AED" />
+                    <Ionicons name="create-outline" size={18} color="#7C3AED" />
+                    <Text className="ml-2 font-pmedium text-violet-700">
+                      Edit
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    className="bg-red-100 p-2 rounded-xl"
+                    className="flex-row items-center bg-red-100 px-4 py-2.5 rounded-xl flex-1"
                     onPress={() => handleDeleteTrip(trip.id)}
                   >
-                    <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                    <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                    <Text className="ml-2 font-pmedium text-red-600">
+                      Delete
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>

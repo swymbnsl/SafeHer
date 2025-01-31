@@ -127,7 +127,7 @@ const EditProfile = () => {
             >
               <Ionicons name="arrow-back" size={24} color="#4a3b6b" />
             </TouchableOpacity>
-            <Text className="text-xl font-pbold text-gray-900">
+            <Text className="text-xl text-left w-full ml-3 font-pbold text-gray-900">
               Edit Profile
             </Text>
           </View>

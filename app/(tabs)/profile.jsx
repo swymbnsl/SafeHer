@@ -17,7 +17,12 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { signOut } from "@/lib/supabase";
-import { getUserFromDb, getUserTrips, getFriends } from "@/lib/supabase";
+import {
+  getUserFromDb,
+  getUserTrips,
+  getFriends,
+  getUserTripCount,
+} from "@/lib/supabase";
 
 const StatCard = ({ icon, label, value }) => (
   <View
@@ -102,6 +107,7 @@ const Profile = () => {
       const userData = await getUserFromDb();
       const userTrips = await getUserTrips();
       const userFriends = await getFriends();
+      const tripCount = await getUserTripCount();
 
       const recentTrips = userTrips.slice(0, 2).map((trip) => ({
         name: trip.name,
@@ -118,7 +124,7 @@ const Profile = () => {
         avatar: userData.avatar,
         email: userData.email,
         phone: userData.phone_number || "Add your phone",
-        totalTrips: userTrips.length,
+        totalTrips: tripCount,
         friends: userFriends.length,
         recentTrips,
       });

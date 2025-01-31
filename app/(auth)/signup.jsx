@@ -95,10 +95,11 @@ export default function SignUp() {
 
       await fetchUser();
     } catch (error) {
-      Alert.alert("Error", "An unexpected error occurred. Please try again.", [
-        { text: "OK" },
-      ]);
-      console.log(error.cause);
+      Alert.alert(
+        "Error",
+        error.message || "An unexpected error occurred. Please try again.",
+        [{ text: "OK" }]
+      );
     } finally {
       setIsLoading(false);
     }
