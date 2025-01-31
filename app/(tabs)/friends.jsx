@@ -21,11 +21,38 @@ import {
   declineFriendRequest,
   removeFriend,
 } from "@/lib/supabase";
+import * as Location from "expo-location";
+import { calculateDistance } from "@/utils/locationUtils";
 
 const FriendCard = ({ friend, onViewProfile, onRemove, onMessage }) => {
+  const [distance, setDistance] = useState(null);
+
+  useEffect(() => {
+    if (friend.location) {
+      const getLocationDistance = async () => {
+        try {
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          if (status !== "granted") return;
+
+          const location = await Location.getCurrentPositionAsync({});
+          const dist = calculateDistance(
+            location.coords.latitude,
+            location.coords.longitude,
+            friend.location.latitude,
+            friend.location.longitude
+          );
+          setDistance(dist);
+        } catch (error) {
+          console.log("Error calculating distance:", error);
+        }
+      };
+      getLocationDistance();
+    }
+  }, [friend.location]);
+
   return (
     <TouchableOpacity
-      className="bg-white p-4 rounded-2xl mb-4"
+      className="bg-white p-4 rounded-2xl mb-4 relative"
       style={{
         shadowColor: "#7C3AED",
         shadowOpacity: 0.1,
@@ -34,40 +61,78 @@ const FriendCard = ({ friend, onViewProfile, onRemove, onMessage }) => {
         elevation: 4,
       }}
       onPress={() => onViewProfile(friend)}
+      accessibilityLabel={`View ${friend.name}'s profile`}
+      accessibilityHint="Double tap to view detailed profile"
     >
-      <View className="flex-row items-center justify-between">
-        <View className="flex-row items-center flex-1">
+      <View className="absolute right-2 bottom-2">
+        <Text className="text-xs text-gray-400 font-pmedium">
+          Tap to expand
+        </Text>
+      </View>
+
+      <View className="flex-row items-start justify-between">
+        <View className="flex-row flex-1">
           {friend.avatar ? (
             <Image
               source={{ uri: friend.avatar }}
-              className="w-12 h-12 rounded-full"
+              className="w-20 h-20 rounded-full"
             />
           ) : (
-            <View className="w-12 h-12 rounded-full bg-violet-200 items-center justify-center">
-              <Text className="text-violet-700 font-pbold text-lg">
+            <View className="w-20 h-20 rounded-full bg-violet-200 items-center justify-center">
+              <Text className="text-violet-700 font-pbold text-2xl">
                 {friend.name?.charAt(0).toUpperCase()}
               </Text>
             </View>
           )}
-          <View className="ml-3 flex-1">
-            <Text className="text-gray-800 font-psemibold text-base">
+          <View className="ml-4 flex-1 justify-center">
+            <Text className="text-gray-900 font-pbold text-lg mb-1">
               {friend.name}
             </Text>
-            <Text className="text-gray-500 font-plight">
-              {friend.mutualFriends} mutual friends
+            <Text className="text-gray-500 font-pmedium text-sm mb-2">
+              {friend.age ? `${friend.age} y/o` : ""}
             </Text>
+
+            {friend.bio && (
+              <Text
+                className="text-gray-600 font-pmedium text-sm mb-2"
+                numberOfLines={2}
+              >
+                {friend.bio}
+              </Text>
+            )}
+
+            {(friend.location || distance) && (
+              <View className="flex-row items-center">
+                <Ionicons name="location" size={14} color="#6B7280" />
+                <Text className="text-gray-500 font-pmedium text-sm ml-1">
+                  {distance ? `${distance} away` : "Location shared"}
+                </Text>
+              </View>
+            )}
+
+            {friend.trips > 0 && (
+              <View className="flex-row items-center mt-1">
+                <Ionicons name="map" size={14} color="#6B7280" />
+                <Text className="text-gray-500 font-pmedium text-sm ml-1">
+                  {friend.trips} trips
+                </Text>
+              </View>
+            )}
           </View>
         </View>
-        <View className="flex-row items-center">
+
+        <View className="flex-row items-start ml-3">
           <TouchableOpacity
-            className="mr-4 bg-violet-100 p-2 rounded-xl"
+            className="mr-3 bg-violet-100 p-2 rounded-xl"
             onPress={() => onMessage(friend)}
+            accessibilityLabel={`Message ${friend.name}`}
           >
             <Ionicons name="chatbubble" size={20} color="#7C3AED" />
           </TouchableOpacity>
           <TouchableOpacity
             className="bg-red-100 p-2 rounded-xl"
             onPress={() => onRemove(friend)}
+            accessibilityLabel={`Remove ${friend.name} from friends`}
           >
             <Ionicons name="person-remove" size={20} color="#EF4444" />
           </TouchableOpacity>
@@ -261,6 +326,7 @@ const Friends = () => {
             getFriends(),
             getFriendRequests(),
           ]);
+          console.log("friendsData", friendsData);
           setFriends(friendsData);
           setFriendRequests(requestsData);
         } catch (error) {
