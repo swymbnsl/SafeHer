@@ -14,8 +14,12 @@ export default function TabLayout() {
   const { user, isLoading, fetchUser } = useUserContext();
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.replace("/");
+    if (!isLoading) {
+      if (!user) {
+        router.replace("/");
+      } else if (!user.isVerified) {
+        router.replace("/verification");
+      }
     }
   }, [isLoading, user]);
 
@@ -51,7 +55,7 @@ export default function TabLayout() {
     ]).start();
   };
 
-  if (isLoading || !user) {
+  if (isLoading || !user || !user.isVerified) {
     return null;
   }
 
@@ -190,6 +194,12 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="chat"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="verification"
         options={{
           href: null,
         }}

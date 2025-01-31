@@ -212,17 +212,6 @@ const Home = () => {
                 color={isSharing ? "#6D28D9" : "#4B5563"}
               />
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => router.push("/notifications")}
-              className="relative p-2"
-            >
-              <Ionicons
-                name="notifications-outline"
-                size={24}
-                color="#4B5563"
-              />
-              <View className="absolute top-1 right-1 w-2.5 h-2.5 bg-violet-600 rounded-full" />
-            </TouchableOpacity>
           </View>
         </View>
       </View>

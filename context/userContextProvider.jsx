@@ -28,14 +28,15 @@ export const UserProvider = ({ children }) => {
         age: res.age,
         interests: res.interests,
         friends: res.friends,
+        isVerified: res.verified || false,
       });
     } catch (error) {
       setUser(undefined);
     } finally {
-      isLoading;
       setIsLoading(false);
     }
   };
+
   useEffect(() => {
     fetchUser();
   }, []);
