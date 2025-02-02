@@ -12,7 +12,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { updateProfile } from "@/lib/supabase";
-import Toast from "@/components/Toast";
 import { useUserContext } from "@/context/userContextProvider";
 import * as FileSystem from "expo-file-system";
 
@@ -30,8 +29,6 @@ const EditProfile = () => {
   };
 
   const [profileData, setProfileData] = useState(initialProfileState);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
   const [interestInput, setInterestInput] = useState("");
 
   useEffect(() => {
@@ -133,19 +130,17 @@ const EditProfile = () => {
         ...profileData,
         phone_number: phoneWithPrefix,
       });
-      await fetchUser(); // Refresh user context
+      await fetchUser();
 
-      // Reset form state
       setProfileData(initialProfileState);
       setInterestInput("");
 
-      setToastMessage("Profile updated successfully!");
-      setShowToast(true);
-
-      setTimeout(() => {
-        setShowToast(false);
-        router.replace("/(tabs)/profile");
-      }, 1500);
+      Alert.alert("Success", "Profile updated successfully!", [
+        {
+          text: "OK",
+          onPress: () => router.replace("/(tabs)/profile"),
+        },
+      ]);
     } catch (error) {
       console.log("error", error);
       Alert.alert("Error", "Failed to update profile");
@@ -341,11 +336,6 @@ const EditProfile = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-      {/* Toast */}
-      {showToast && (
-        <Toast message={toastMessage} onHide={() => setShowToast(false)} />
-      )}
     </View>
   );
 };

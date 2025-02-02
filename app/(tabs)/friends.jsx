@@ -8,12 +8,12 @@ import {
   Image,
   Modal,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import Toast from "@/components/Toast";
 import {
   getFriends,
   getFriendRequests,
@@ -289,7 +289,6 @@ const Friends = () => {
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -312,8 +311,10 @@ const Friends = () => {
           setFriendRequests(requestsData);
         } catch (error) {
           console.log("Error:", error.cause);
-          setToastMessage(error.cause?.message || "Failed to load friends");
-          setShowToast(true);
+          Alert.alert(
+            "Error",
+            error.cause?.message || "Failed to load friends"
+          );
         } finally {
           setIsLoading(false);
         }
@@ -341,13 +342,15 @@ const Friends = () => {
       );
       setFriends((prev) => [...prev, selectedRequest]);
       setShowAcceptModal(false);
-      setToastMessage(`You are now friends with ${selectedRequest.name}`);
-      setShowToast(true);
+      Alert.alert(
+        "Success",
+        `You are now friends with ${selectedRequest.name}`
+      );
     } catch (error) {
-      setToastMessage(
+      Alert.alert(
+        "Error",
         error.cause?.message || "Failed to accept friend request"
       );
-      setShowToast(true);
     } finally {
       setSelectedRequest(null);
     }
@@ -365,13 +368,15 @@ const Friends = () => {
         prev.filter((req) => req.id !== selectedRequest.id)
       );
       setShowDeclineModal(false);
-      setToastMessage(`Friend request from ${selectedRequest.name} declined`);
-      setShowToast(true);
+      Alert.alert(
+        "Success",
+        `Friend request from ${selectedRequest.name} declined`
+      );
     } catch (error) {
-      setToastMessage(
+      Alert.alert(
+        "Error",
         error.cause?.message || "Failed to decline friend request"
       );
-      setShowToast(true);
     } finally {
       setSelectedRequest(null);
     }
@@ -387,14 +392,13 @@ const Friends = () => {
       await removeFriend(selectedFriend.id);
       setFriends((prev) => prev.filter((f) => f.id !== selectedFriend.id));
       setShowRemoveModal(false);
-      setToastMessage(
+      Alert.alert(
+        "Success",
         `${selectedFriend.name} has been removed from your friends`
       );
-      setShowToast(true);
     } catch (error) {
       console.log("Error:", error);
-      setToastMessage(error.cause?.message || "Failed to remove friend");
-      setShowToast(true);
+      Alert.alert("Error", error.cause?.message || "Failed to remove friend");
     } finally {
       setSelectedFriend(null);
     }
@@ -603,10 +607,6 @@ const Friends = () => {
               </View>
             </View>
           </Modal>
-        )}
-
-        {showToast && (
-          <Toast message={toastMessage} onHide={() => setShowToast(false)} />
         )}
       </View>
     </SafeAreaView>

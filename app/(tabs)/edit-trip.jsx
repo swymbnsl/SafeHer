@@ -14,7 +14,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { format, parse } from "date-fns";
-import Toast from "@/components/Toast";
 import * as ImagePicker from "expo-image-picker";
 import { updateTrip } from "@/lib/supabase";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -26,7 +25,6 @@ const EditTrip = () => {
   const router = useRouter();
   const { tripId, tripData: tripDataParam } = useLocalSearchParams();
   const [showConfirm, setShowConfirm] = useState(false);
-  const [showToast, setShowToast] = useState(false);
   const initialTripState = {
     id: "",
     name: "",
@@ -49,7 +47,6 @@ const EditTrip = () => {
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [error, setError] = useState("");
-  const [toastMessage, setToastMessage] = useState("");
   const [interestInput, setInterestInput] = useState("");
   const [locationSuggestions, setLocationSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -273,20 +270,15 @@ const EditTrip = () => {
       setLocationSuggestions([]);
       setShowSuggestions(false);
 
-      setToastMessage("Trip updated successfully!");
-      setShowToast(true);
-
-      setTimeout(() => {
-        router.replace("/(tabs)/my-trips");
-      }, 1500);
+      Alert.alert("Success", "Trip updated successfully!");
+      router.push("/(tabs)/my-trips");
     } catch (error) {
-      console.log("Update error:", error);
-      setError("Failed to update trip");
+      Alert.alert("Error", error.message || "Failed to update trip");
     }
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-white">
       {/* Header */}
       <View className="px-6 pt-14 pb-4 border-b border-gray-100">
         <View className="flex-row items-center justify-between">
@@ -579,12 +571,7 @@ const EditTrip = () => {
           </View>
         </View>
       </Modal>
-
-      {/* Toast */}
-      {showToast && (
-        <Toast message={toastMessage} onHide={() => setShowToast(false)} />
-      )}
-    </View>
+    </SafeAreaView>
   );
 };
 

@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   TextInput,
   RefreshControl,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -22,8 +23,6 @@ const Trips = () => {
   const [filteredTrips, setFilteredTrips] = useState([]);
   const [isLoadingTrips, setIsLoadingTrips] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
   const [refreshing, setRefreshing] = useState(false);
 
   // Initial filters state
@@ -80,8 +79,7 @@ const Trips = () => {
         setFilteredTrips(tripsWithDistance);
       } catch (error) {
         console.log("Failed to load trips:", error);
-        setToastMessage("Failed to load trips");
-        setShowToast(true);
+        Alert.alert("Error", "Failed to load trips");
       } finally {
         setIsLoadingTrips(false);
       }
@@ -144,20 +142,8 @@ const Trips = () => {
   // Debug logging
   useEffect(() => {}, [filters, filteredTrips]);
 
-  // Toast auto-hide effect
-  useEffect(() => {
-    if (showToast) {
-      const timer = setTimeout(() => {
-        setShowToast(false);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [showToast]);
-
   const handleRequestSent = async (message) => {
-    setToastMessage(message);
-    setShowToast(true);
-    // Reload trips after request is sent
+    Alert.alert("Success", message);
     await loadTrips();
   };
 
@@ -183,12 +169,40 @@ const Trips = () => {
       setFilteredTrips(tripsWithDistance);
     } catch (error) {
       console.log("Failed to refresh trips:", error);
-      setToastMessage("Failed to refresh trips");
-      setShowToast(true);
+      Alert.alert("Error", "Failed to refresh trips");
     } finally {
       setRefreshing(false);
     }
   }, [user?.location]);
+
+  const loadTrips = async () => {
+    try {
+      setIsLoadingTrips(true);
+      const fetchedTrips = await getActiveTrips();
+
+      // Calculate distance for each trip
+      const tripsWithDistance = fetchedTrips.map((trip) => {
+        let distance = null;
+        if (user?.location && trip.location?.coordinates) {
+          distance = calculateDistance(
+            user.location.latitude,
+            user.location.longitude,
+            trip.location.coordinates.lat,
+            trip.location.coordinates.lng
+          );
+        }
+        return { ...trip, distance };
+      });
+
+      setTrips(tripsWithDistance);
+      setFilteredTrips(tripsWithDistance);
+    } catch (error) {
+      console.log("Failed to load trips:", error);
+      Alert.alert("Error", "Failed to load trips");
+    } finally {
+      setIsLoadingTrips(false);
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -287,7 +301,7 @@ const Trips = () => {
                     image={trip.image}
                     location={trip.location}
                     userLocation={user?.location}
-                    age={user?.age}
+                    age={trip.users.age}
                     createdBy={trip.created_by}
                     isFriend={user?.friends?.includes(trip.created_by)}
                     fullWidth={true}
@@ -314,17 +328,6 @@ const Trips = () => {
         handleFilterChange={handleFilterChange}
         onReset={handleResetFilters}
       />
-
-      {/* Toast Message */}
-      {showToast && (
-        <View className="absolute bottom-20 left-0 right-0 mx-6">
-          <View className="bg-gray-800 px-4 py-3 rounded-xl">
-            <Text className="text-white text-center font-pmedium">
-              {toastMessage}
-            </Text>
-          </View>
-        </View>
-      )}
     </SafeAreaView>
   );
 };

@@ -7,6 +7,7 @@ import {
   Share,
   Linking,
   RefreshControl,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -56,8 +57,6 @@ const Home = () => {
   const { user, isLoading, fetchUser } = useUserContext();
   const [activeTrips, setActiveTrips] = useState([]);
   const [isLoadingTrips, setIsLoadingTrips] = useState(true);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
   const router = useRouter();
   const [isSharing, setIsSharing] = useState(false);
   const [locationInterval, setLocationInterval] = useState(null);
@@ -95,8 +94,7 @@ const Home = () => {
         await loadTrips();
       } catch (error) {
         console.log("Error initializing screen:", error);
-        setToastMessage(error.message || "Failed to initialize screen");
-        setShowToast(true);
+        Alert.alert("Error", error.message || "Failed to initialize screen");
       }
     };
 
@@ -122,8 +120,7 @@ const Home = () => {
       setActiveTrips(tripsData);
     } catch (error) {
       console.log("Error loading trips:", error.message);
-      setToastMessage(error.message || "Failed to load trips data");
-      setShowToast(true);
+      Alert.alert("Error", error.message || "Failed to load trips data");
       setActiveTrips([]); // Set empty array as fallback
     } finally {
       setIsLoadingTrips(false);
@@ -160,7 +157,7 @@ const Home = () => {
 
         await updateLocationSharingStatus(true);
         setIsSharing(true);
-        setToastMessage("Location sharing started");
+        Alert.alert("Success", "Location sharing started");
       } else {
         // Stop location updates
         if (await Location.hasStartedLocationUpdatesAsync(LOCATION_TRACKING)) {
@@ -168,13 +165,14 @@ const Home = () => {
         }
         await updateLocationSharingStatus(false);
         setIsSharing(false);
-        setToastMessage("Location sharing stopped");
+        Alert.alert("Success", "Location sharing stopped");
       }
-      setShowToast(true);
     } catch (error) {
       console.error("Location sharing error:", error);
-      setToastMessage(error.message || "Failed to update location sharing");
-      setShowToast(true);
+      Alert.alert(
+        "Error",
+        error.message || "Failed to update location sharing"
+      );
       setIsSharing(false);
     }
   };
@@ -184,19 +182,16 @@ const Home = () => {
       const shareUrl = `${process.env.EXPO_PUBLIC_WEBPAGE_DOMAIN}/location?userId=${user?.id}`;
       await Share.share({
         message: `Track my location in real-time: ${shareUrl}`,
-        url: shareUrl, // iOS only
+        url: shareUrl,
       });
     } catch (error) {
       console.log("Error sharing:", error);
-      setToastMessage("Failed to share location link");
-      setShowToast(true);
+      Alert.alert("Error", "Failed to share location link");
     }
   };
 
   const handleRequestSent = async (message) => {
-    setToastMessage(message);
-    setShowToast(true);
-    // Reload trips after request is sent
+    Alert.alert("Success", message);
     await loadTrips();
   };
 
@@ -205,16 +200,6 @@ const Home = () => {
     await fetchUser();
     setRefreshing(false);
   }, [fetchUser]);
-
-  // Toast auto-hide effect
-  useEffect(() => {
-    if (showToast) {
-      const timer = setTimeout(() => {
-        setShowToast(false);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [showToast]);
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
@@ -429,8 +414,7 @@ const Home = () => {
                   <TouchableOpacity
                     onPress={() => {
                       Linking.openURL("tel:1091");
-                      setToastMessage("Calling Women Helpline...");
-                      setShowToast(true);
+                      Alert.alert("Calling", "Connecting to Women Helpline...");
                     }}
                     className="bg-red-100 p-4 rounded-xl flex-row items-center justify-center"
                     accessibilityLabel="Emergency SOS button to call women helpline"
@@ -452,17 +436,6 @@ const Home = () => {
           <View className="h-20" />
         </View>
       </ScrollView>
-
-      {/* Toast Message */}
-      {showToast && (
-        <View className="absolute bottom-20 left-0 right-0 mx-6">
-          <View className="bg-gray-800 px-4 py-3 rounded-xl">
-            <Text className="text-white text-center font-pmedium">
-              {toastMessage}
-            </Text>
-          </View>
-        </View>
-      )}
     </SafeAreaView>
   );
 };
