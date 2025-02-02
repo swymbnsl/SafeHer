@@ -171,6 +171,12 @@ export default function TabLayout() {
 
       {/* Hidden screens */}
       <Tabs.Screen
+        name="report-profile"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
         name="edit-profile"
         options={{
           href: null,
@@ -187,6 +193,7 @@ export default function TabLayout() {
         options={{
           href: null,
         }}
+        profile
       />
       <Tabs.Screen
         name="my-trips"

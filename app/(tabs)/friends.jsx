@@ -22,7 +22,13 @@ import {
   removeFriend,
 } from "@/lib/supabase";
 
-const FriendCard = ({ friend, onViewProfile, onRemove, onMessage }) => {
+const FriendCard = ({
+  friend,
+  onViewProfile,
+  onRemove,
+  onMessage,
+  onReport,
+}) => {
   return (
     <TouchableOpacity
       className="bg-white p-4 rounded-2xl mb-4 relative"
@@ -58,11 +64,11 @@ const FriendCard = ({ friend, onViewProfile, onRemove, onMessage }) => {
             </View>
           )}
           <View className="ml-4 flex-1 justify-center">
-            <Text className="text-gray-900 font-pbold text-lg mb-1">
+            <Text className="text-gray-900 font-pbold text-md mb-1 truncate">
               {friend.name}
             </Text>
             <Text className="text-gray-500 font-pmedium text-sm mb-2">
-              {friend.age ? `${friend.age} y/o` : ""}
+              {friend.age ? `${friend.age} y/o` : "Age not set"}
             </Text>
 
             {friend.bio && (
@@ -83,6 +89,13 @@ const FriendCard = ({ friend, onViewProfile, onRemove, onMessage }) => {
             accessibilityLabel={`Message ${friend.name}`}
           >
             <Ionicons name="chatbubble" size={20} color="#7C3AED" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="mr-3 bg-orange-100 p-2 rounded-xl"
+            onPress={() => onReport(friend)}
+            accessibilityLabel={`Report ${friend.name}`}
+          >
+            <Ionicons name="flag" size={20} color="#F97316" />
           </TouchableOpacity>
           <TouchableOpacity
             className="bg-red-100 p-2 rounded-xl"
@@ -124,7 +137,7 @@ const FriendRequestCard = ({ request, onAccept, onDecline }) => (
 
       <View className="ml-3 flex-1">
         <View className="flex-row items-center justify-between">
-          <Text className="text-gray-900 font-pbold text-lg">
+          <Text className="text-gray-900 font-pbold text-lg truncate">
             {request.name}
           </Text>
           <Text className="text-gray-500 font-pmedium">{request.age} y/o</Text>
@@ -183,7 +196,7 @@ const ProfileModal = ({ visible, onClose, profile }) => (
                 source={{ uri: profile.avatar }}
                 className="w-24 h-24 rounded-full mb-4"
               />
-              <Text className="text-xl font-pbold text-[#4a3b6b]">
+              <Text className="text-xl font-pbold text-[#4a3b6b] truncate max-w-[80%] text-center">
                 {profile.name}
               </Text>
               {profile.age && (
@@ -397,6 +410,13 @@ const Friends = () => {
     });
   };
 
+  const handleReportFriend = (friend) => {
+    router.push({
+      pathname: "/report-profile",
+      params: { userId: friend.id },
+    });
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <View className="px-6 pt-2 pb-4 bg-white">
@@ -475,6 +495,7 @@ const Friends = () => {
                     onViewProfile={handleViewProfile}
                     onRemove={handleRemoveFriend}
                     onMessage={handleMessage}
+                    onReport={handleReportFriend}
                   />
                 ))
               ) : (
@@ -501,7 +522,6 @@ const Friends = () => {
               </View>
             )}
           </View>
-          <View className="h-20" />
         </ScrollView>
 
         <ProfileModal

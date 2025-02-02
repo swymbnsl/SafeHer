@@ -19,7 +19,16 @@ import * as FileSystem from "expo-file-system";
 const EditProfile = () => {
   const router = useRouter();
   const { user, fetchUser } = useUserContext();
-  const [profileData, setProfileData] = useState(null);
+  const initialProfileState = {
+    name: "",
+    avatar: null,
+    email: "",
+    phone: "",
+    description: "",
+    interests: [],
+  };
+
+  const [profileData, setProfileData] = useState(initialProfileState);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [interestInput, setInterestInput] = useState("");
@@ -91,6 +100,11 @@ const EditProfile = () => {
     try {
       await updateProfile(profileData);
       await fetchUser(); // Refresh user context
+
+      // Reset form state
+      setProfileData(initialProfileState);
+      setInterestInput("");
+
       setToastMessage("Profile updated successfully!");
       setShowToast(true);
 

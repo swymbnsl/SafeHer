@@ -27,7 +27,7 @@ const EditTrip = () => {
   const { tripId, tripData: tripDataParam } = useLocalSearchParams();
   const [showConfirm, setShowConfirm] = useState(false);
   const [showToast, setShowToast] = useState(false);
-  const [tripData, setTripData] = useState({
+  const initialTripState = {
     id: "",
     name: "",
     startDate: new Date(),
@@ -40,7 +40,8 @@ const EditTrip = () => {
     interests: [],
     image: null,
     coordinates: null,
-  });
+  };
+  const [tripData, setTripData] = useState(initialTripState);
   const { user } = useUserContext();
 
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
@@ -265,6 +266,13 @@ const EditTrip = () => {
       };
 
       await updateTrip(updatedTrip);
+
+      // Reset form state
+      setTripData(initialTripState);
+      setInterestInput("");
+      setLocationSuggestions([]);
+      setShowSuggestions(false);
+
       setToastMessage("Trip updated successfully!");
       setShowToast(true);
 

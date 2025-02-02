@@ -22,23 +22,25 @@ import { decode } from "base64-arraybuffer";
 import * as FileSystem from "expo-file-system";
 import { debounce } from "lodash";
 
+const initialTripState = {
+  name: "",
+  startDate: new Date(),
+  endDate: new Date(),
+  startTime: new Date(),
+  endTime: new Date(),
+  companions: "1",
+  description: "",
+  location: "",
+  interests: [],
+  image: null,
+  coordinates: null,
+};
+
 const NewTrip = () => {
   const router = useRouter();
   const [showConfirm, setShowConfirm] = useState(false);
   const [showToast, setShowToast] = useState(false);
-  const [tripData, setTripData] = useState({
-    name: "",
-    startDate: new Date(),
-    endDate: new Date(),
-    startTime: new Date(),
-    endTime: new Date(),
-    companions: "1", // Default value
-    description: "",
-    location: "",
-    interests: [],
-    image: null,
-    coordinates: null,
-  });
+  const [tripData, setTripData] = useState(initialTripState);
   const { user } = useUserContext();
 
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
@@ -232,6 +234,12 @@ const NewTrip = () => {
       setShowConfirm(false);
       setToastMessage("Trip created successfully!");
       setShowToast(true);
+
+      // Reset form state
+      setTripData(initialTripState);
+      setInterestInput("");
+      setLocationSuggestions([]);
+      setShowSuggestions(false);
 
       setTimeout(() => {
         router.replace("/my-trips");
