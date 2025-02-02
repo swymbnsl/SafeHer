@@ -28,7 +28,9 @@ const ActiveTripCard = ({
   onRequestSent,
   isFriend = false,
   hideActions = false,
+  hideDistance = false,
 }) => {
+  console.log("age", age);
   const [isRequesting, setIsRequesting] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const router = useRouter();
@@ -225,12 +227,14 @@ const ActiveTripCard = ({
             </Text>
           </View>
 
-          <View className="flex-row items-center">
-            <View className="bg-violet-100 p-1.5 rounded-full mr-2">
-              <Ionicons name="location-outline" size={16} color="#6D28D9" />
+          {!hideDistance && (
+            <View className="flex-row items-center">
+              <View className="bg-violet-100 p-1.5 rounded-full mr-2">
+                <Ionicons name="location-outline" size={16} color="#6D28D9" />
+              </View>
+              <Text className="text-gray-700 font-pmedium">{distanceText}</Text>
             </View>
-            <Text className="text-gray-700 font-pmedium">{distanceText}</Text>
-          </View>
+          )}
 
           <View className="flex-row items-center">
             <View className="bg-violet-100 p-1.5 rounded-full mr-2">

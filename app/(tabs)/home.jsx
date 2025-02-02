@@ -270,7 +270,7 @@ const Home = () => {
                       image={trip.image}
                       location={trip.location}
                       userLocation={user?.location}
-                      age={user?.age}
+                      age={trip.users.age}
                       createdBy={trip.created_by}
                       isFriend={user?.friends?.includes(trip.created_by)}
                       onRequestSent={handleRequestSent}

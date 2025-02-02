@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import ActiveTripCard from "../../components/ActiveTripCard";
 import { getUserTrips, deleteTrip } from "../../lib/supabase";
 import { useFocusEffect } from "@react-navigation/native";
+import { supabase } from "../../lib/supabase";
 
 const MyTrips = () => {
   const router = useRouter();
@@ -24,6 +25,7 @@ const MyTrips = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [userLocation, setUserLocation] = useState(null);
 
   const handleDeleteTrip = (tripId) => {
     setSelectedTripId(tripId);
@@ -71,6 +73,17 @@ const MyTrips = () => {
         try {
           setIsLoading(true);
           const trips = await getUserTrips();
+
+          // Get user location from Supabase
+          const { data: userData } = await supabase
+            .from("users")
+            .select("location")
+            .single();
+
+          if (userData?.location) {
+            setUserLocation(userData.location);
+          }
+
           setUserTrips(trips);
         } catch (error) {
           console.log("Failed to load trips:", error);
@@ -119,8 +132,10 @@ const MyTrips = () => {
                   companions={trip.max_companions}
                   image={trip.image}
                   coordinates={trip.location}
+                  userLocation={userLocation}
                   fullWidth={true}
                   hideActions={true}
+                  hideDistance={true}
                 />
                 <View className="flex-row justify-evenly mt-3 gap-3 px-1">
                   <TouchableOpacity

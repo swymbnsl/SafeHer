@@ -132,6 +132,7 @@ const Profile = () => {
       await signOut();
       router.replace("/");
     } catch (error) {
+      console.log("error", error.cause);
       Alert.alert("Error", "Failed to logout. Please try again.");
     }
   };
