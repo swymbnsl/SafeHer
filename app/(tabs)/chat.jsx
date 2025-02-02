@@ -43,7 +43,7 @@ const Chat = () => {
         markMessagesAsRead(conversationId);
       }
     };
-  }, []);
+  }, [params.id]);
 
   const markMessagesAsRead = async (convId) => {
     try {
@@ -102,6 +102,12 @@ const Chat = () => {
 
   const initializeChat = async () => {
     try {
+      // Reset states when initializing new chat
+      setMessages([]);
+      setConversationId(null);
+      setOtherUser(null);
+      setIsLoading(true);
+
       let convId;
       let otherUserId;
 
@@ -178,6 +184,17 @@ const Chat = () => {
     }
   };
 
+  // Add this function to handle back navigation
+  const handleBack = () => {
+    if (params.type === "friend") {
+      router.push("/(tabs)/friends");
+    } else if (params.type === "conversation") {
+      router.push("/(tabs)/chats");
+    } else {
+      router.back();
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -188,8 +205,10 @@ const Chat = () => {
       <View className="px-6 pt-14 pb-4 bg-white border-b border-gray-100">
         <View className="flex-row items-center">
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={handleBack}
             className="bg-gray-50 p-2 rounded-xl mr-4"
+            accessibilityLabel="Go back"
+            accessibilityHint="Returns to previous screen"
           >
             <Ionicons name="chevron-back" size={24} color="#4a3b6b" />
           </TouchableOpacity>
