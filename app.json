@@ -12,9 +12,7 @@
       "supportsTablet": true
     },
     "android": {
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ],
+      "permissions": ["android.permission.RECORD_AUDIO"],
       "package": "com.swymbnsl.SafeHer"
     },
     "web": {
@@ -38,6 +36,14 @@
         {
           "photosPermission": "The app needs access to your photos to let you choose a profile picture.",
           "cameraPermission": "The app needs access to your camera to let you take profile pictures."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location for trip sharing.",
+          "locationAlwaysPermission": "Allow $(PRODUCT_NAME) to use your location in the background for continuous trip sharing.",
+          "locationWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location while using the app."
         }
       ]
     ],

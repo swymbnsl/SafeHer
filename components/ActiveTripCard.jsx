@@ -30,7 +30,6 @@ const ActiveTripCard = ({
   hideActions = false,
   hideDistance = false,
 }) => {
-  console.log("age", age);
   const [isRequesting, setIsRequesting] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const router = useRouter();
