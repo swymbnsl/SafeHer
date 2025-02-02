@@ -11,11 +11,8 @@ import {
   Easing,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
-import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { signOut } from "@/lib/supabase";
 import {
   getUserFromDb,
@@ -110,7 +107,7 @@ const Profile = () => {
       const userTrips = await getUserTrips();
       const userFriends = await getFriends();
       const tripCount = await getUserTripCount();
-
+      console.log("userData", userData);
       // Get the first 5 trips
       const recentTrips = userTrips.slice(0, 5);
 
@@ -127,53 +124,6 @@ const Profile = () => {
     } catch (error) {
       console.log("Error loading profile:", error);
       Alert.alert("Error", "Failed to load profile data");
-    }
-  };
-
-  const pickImage = async () => {
-    try {
-      // Request permissions
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-      if (status !== "granted") {
-        alert("Sorry, we need camera roll permissions to upload images.");
-        return;
-      }
-
-      // Launch image picker
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 1,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        // Compress the image
-        const manipulatedImage = await manipulateAsync(
-          result.assets[0].uri,
-          [{ resize: { width: 500 } }],
-          { compress: 0.7, format: SaveFormat.JPEG }
-        );
-
-        // Update profile avatar
-        setProfile((prev) => ({
-          ...prev,
-          avatar: manipulatedImage.uri,
-        }));
-
-        // Here you would typically upload the image to your server
-        // For now, we'll just save it locally
-        try {
-          await AsyncStorage.setItem("profileAvatar", manipulatedImage.uri);
-        } catch (error) {
-          console.log("Error saving avatar:", error);
-        }
-      }
-    } catch (error) {
-      console.log("Error picking image:", error);
-      alert("There was an error picking the image. Please try again.");
     }
   };
 
@@ -216,7 +166,7 @@ const Profile = () => {
           </View>
 
           <View className="items-center">
-            <TouchableOpacity onPress={pickImage} className="relative">
+            <View className="relative">
               {profile.avatar ? (
                 <Image
                   source={{ uri: profile.avatar }}
@@ -232,10 +182,7 @@ const Profile = () => {
                   </Text>
                 </View>
               )}
-              <View className="absolute bottom-0 right-0 bg-violet-600 p-2 rounded-full">
-                <Ionicons name="camera" size={16} color="white" />
-              </View>
-            </TouchableOpacity>
+            </View>
             <Text className="text-2xl font-pbold text-gray-900 mt-4">
               {profile.name}
             </Text>

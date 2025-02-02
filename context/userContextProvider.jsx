@@ -22,6 +22,8 @@ export const UserProvider = ({ children }) => {
       setUser({
         id: res.user_id,
         name: res.name,
+        phone: res.phone_number,
+        bio: res.bio,
         email: res.email,
         avatar: res.avatar,
         location: res.location,

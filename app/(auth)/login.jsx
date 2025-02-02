@@ -43,7 +43,7 @@ const LoginScreen = () => {
       router.replace("/home");
     } catch (error) {
       console.log(error.cause);
-      setError(error.cause?.message || "An error occurred during login");
+      setError(error.cause || "An error occurred during login");
     } finally {
       setIsLoading(false);
     }

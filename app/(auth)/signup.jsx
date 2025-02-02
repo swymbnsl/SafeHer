@@ -12,16 +12,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import CustomButton from "../../components/CustomButton";
 import { useUserContext } from "@/context/userContextProvider";
 import CustomInput from "../../components/CustomInput";
-import {
-  emailSignUp,
-  getLoggedInUser,
-  getUserFromDB,
-  supabase,
-} from "@/lib/supabase";
+import { emailSignUp } from "@/lib/supabase";
 
 export default function SignUp() {
   const router = useRouter();
@@ -65,31 +59,9 @@ export default function SignUp() {
       const res = await emailSignUp(inputs.email, inputs.password, inputs.name);
 
       if (res.error) {
-        if (res.error.message.includes("email")) {
-          Alert.alert("Email Error", "Invalid email or email already in use", [
-            { text: "OK" },
-          ]);
-          setErrorText((prev) => ({
-            ...prev,
-            email: "Invalid email or email already in use",
-          }));
-        } else if (res.error.message.includes("password")) {
-          Alert.alert(
-            "Password Error",
-            "Password should be at least 6 characters",
-            [{ text: "OK" }]
-          );
-          setErrorText((prev) => ({
-            ...prev,
-            password: "Password should be at least 6 characters",
-          }));
-        } else {
-          Alert.alert(
-            "Sign Up Error",
-            res.error.message || "Failed to sign up",
-            [{ text: "OK" }]
-          );
-        }
+        Alert.alert("Sign Up Error", res.error.cause || "Failed to sign up", [
+          { text: "OK" },
+        ]);
         return;
       }
 
@@ -97,7 +69,7 @@ export default function SignUp() {
     } catch (error) {
       Alert.alert(
         "Error",
-        error.message || "An unexpected error occurred. Please try again.",
+        error.cause || "An unexpected error occurred. Please try again.",
         [{ text: "OK" }]
       );
     } finally {

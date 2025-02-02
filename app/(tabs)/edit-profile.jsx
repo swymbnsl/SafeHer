@@ -24,6 +24,7 @@ const EditProfile = () => {
     avatar: null,
     email: "",
     phone: "",
+    age: "",
     description: "",
     interests: [],
   };
@@ -37,9 +38,10 @@ const EditProfile = () => {
     if (user) {
       setProfileData({
         name: user.name || "",
-        avatar: user.avatar || null,
+        avatar: null,
         email: user.email || "",
         phone: user.phone_number || "",
+        age: user.age || "",
         description: user.description || "",
         interests: user.interests || [],
       });
@@ -91,14 +93,37 @@ const EditProfile = () => {
     }
   };
 
+  const formatPhoneNumber = (phone) => {
+    // Remove any non-digit characters
+    const digits = phone.replace(/\D/g, "");
+    // Remove +91 prefix if it exists
+    const numberWithoutPrefix = digits.startsWith("91")
+      ? digits.slice(2)
+      : digits;
+    return numberWithoutPrefix;
+  };
+
   const handleUpdateProfile = async () => {
-    if (!profileData.name.trim() || !profileData.email.trim()) {
-      Alert.alert("Error", "Name and email are required");
+    if (
+      !profileData.name.trim() ||
+      !profileData.email.trim() ||
+      !profileData.phone.trim() ||
+      !profileData.age.trim() ||
+      !profileData.description.trim()
+    ) {
+      Alert.alert("Error", "Please fill in all the fields.");
       return;
     }
 
+    // Format phone number before submission
+    const formattedPhone = `+91${formatPhoneNumber(profileData.phone)}`;
+    console.log("formattedPhone", formattedPhone);
+
     try {
-      await updateProfile(profileData);
+      await updateProfile({
+        ...profileData,
+        phone_number: formattedPhone,
+      });
       await fetchUser(); // Refresh user context
 
       // Reset form state
@@ -113,6 +138,7 @@ const EditProfile = () => {
         router.replace("/(tabs)/profile");
       }, 1500);
     } catch (error) {
+      console.log("error", error);
       Alert.alert("Error", "Failed to update profile");
     }
   };
@@ -167,9 +193,7 @@ const EditProfile = () => {
             <View className="relative">
               <Image
                 source={{
-                  uri:
-                    profileData?.avatar?.img?.uri ||
-                    "https://via.placeholder.com/150",
+                  uri: profileData?.avatar?.img || user?.avatar || null,
                 }}
                 className="w-24 h-24 rounded-full bg-gray-100"
               />
@@ -211,14 +235,32 @@ const EditProfile = () => {
             {/* Phone Input */}
             <View>
               <Text className="text-gray-700 font-pmedium mb-2">Phone</Text>
+              <View className="flex-row items-center bg-gray-50 rounded-xl">
+                <Text className="pl-4 text-gray-800 font-pmedium">+91</Text>
+                <TextInput
+                  className="flex-1 p-4 text-gray-800 font-pmedium"
+                  value={formatPhoneNumber(profileData.phone)}
+                  onChangeText={(text) =>
+                    setProfileData((prev) => ({ ...prev, phone: text }))
+                  }
+                  keyboardType="phone-pad"
+                  placeholder="Enter your phone number"
+                  maxLength={10}
+                />
+              </View>
+            </View>
+
+            {/* Age Input */}
+            <View>
+              <Text className="text-gray-700 font-pmedium mb-2">Age</Text>
               <TextInput
                 className="bg-gray-50 rounded-xl p-4 text-gray-800 font-pmedium"
-                value={profileData.phone}
+                value={profileData.age}
                 onChangeText={(text) =>
-                  setProfileData((prev) => ({ ...prev, phone: text }))
+                  setProfileData((prev) => ({ ...prev, age: text }))
                 }
-                keyboardType="phone-pad"
-                placeholder="Enter your phone number"
+                keyboardType="numeric"
+                placeholder="Enter your age"
               />
             </View>
 
