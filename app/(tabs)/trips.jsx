@@ -289,6 +289,7 @@ const Trips = () => {
               filteredTrips.map((trip) => (
                 <View key={trip.id} className="mb-4">
                   <ActiveTripCard
+                    id={trip.id}
                     name={trip.name}
                     posterName={trip.users.name}
                     posterAvatar={trip.users.avatar}
@@ -301,6 +302,8 @@ const Trips = () => {
                     location={trip.location}
                     userLocation={user?.location}
                     age={user?.age}
+                    createdBy={trip.created_by}
+                    isFriend={user?.friends?.includes(trip.created_by)}
                     fullWidth={true}
                     onRequestSent={handleRequestSent}
                   />
