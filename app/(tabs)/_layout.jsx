@@ -21,7 +21,8 @@ export default function TabLayout() {
         router.replace("/verification");
       } else if (user.verificationStatus == "pending") {
         router.replace("/pending-verification");
-      } else if (!user.age || !user.bio || !user.interests) {
+      } else if (!user.age || !user.bio || !user.phone) {
+        console.log("user", user);
         router.replace("/edit-profile");
       }
     }

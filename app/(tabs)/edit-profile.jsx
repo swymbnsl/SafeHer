@@ -40,9 +40,9 @@ const EditProfile = () => {
         name: user.name || "",
         avatar: null,
         email: user.email || "",
-        phone: user.phone_number || "",
+        phone: user.phone || "",
         age: user.age || "",
-        description: user.description || "",
+        description: user.bio || "",
         interests: user.interests || [],
       });
     }
@@ -62,7 +62,7 @@ const EditProfile = () => {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -80,7 +80,7 @@ const EditProfile = () => {
         setProfileData((prev) => ({
           ...prev,
           avatar: {
-            img,
+            img: img.uri,
             base64,
             filePath,
             contentType,
@@ -104,25 +104,34 @@ const EditProfile = () => {
   };
 
   const handleUpdateProfile = async () => {
-    if (
-      !profileData.name.trim() ||
-      !profileData.email.trim() ||
-      !profileData.phone.trim() ||
-      !profileData.age.trim() ||
-      !profileData.description.trim()
-    ) {
-      Alert.alert("Error", "Please fill in all the fields.");
+    // Validate age
+    const ageNum = parseInt(profileData.age);
+    if (isNaN(ageNum) || ageNum < 13 || ageNum > 120) {
+      Alert.alert("Error", "Please enter a valid age between 13 and 120.");
+      return;
+    }
+
+    // Validate phone number
+    const phoneRegex = /^\d{10}$/;
+    const formattedPhone = formatPhoneNumber(profileData.phone);
+    if (!phoneRegex.test(formattedPhone)) {
+      Alert.alert("Error", "Please enter a valid 10-digit phone number.");
+      return;
+    }
+
+    // Validate description
+    if (profileData.description.trim().length < 10) {
+      Alert.alert("Error", "Description must be at least 10 characters long.");
       return;
     }
 
     // Format phone number before submission
-    const formattedPhone = `+91${formatPhoneNumber(profileData.phone)}`;
-    console.log("formattedPhone", formattedPhone);
+    const phoneWithPrefix = `+91${formattedPhone}`;
 
     try {
       await updateProfile({
         ...profileData,
-        phone_number: formattedPhone,
+        phone_number: phoneWithPrefix,
       });
       await fetchUser(); // Refresh user context
 
@@ -193,7 +202,7 @@ const EditProfile = () => {
             <View className="relative">
               <Image
                 source={{
-                  uri: profileData?.avatar?.img || user?.avatar || null,
+                  uri: profileData?.avatar?.img || user?.avatar || undefined,
                 }}
                 className="w-24 h-24 rounded-full bg-gray-100"
               />
@@ -266,9 +275,7 @@ const EditProfile = () => {
 
             {/* Description Input */}
             <View>
-              <Text className="text-gray-700 font-pmedium mb-2">
-                Description
-              </Text>
+              <Text className="text-gray-700 font-pmedium mb-2">Bio</Text>
               <TextInput
                 className="bg-gray-50 rounded-xl p-4 text-gray-800 font-pmedium min-h-[120]"
                 value={profileData.description}
