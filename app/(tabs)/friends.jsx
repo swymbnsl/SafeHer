@@ -186,7 +186,11 @@ const ProfileModal = ({ visible, onClose, profile }) => (
               <Text className="text-xl font-pbold text-[#4a3b6b]">
                 {profile.name}
               </Text>
-              <Text className="text-[#6f5c91] font-pmedium">{profile.bio}</Text>
+              {profile.age && (
+                <Text className="text-[#6f5c91] font-pmedium mt-1">
+                  {profile.age} years old
+                </Text>
+              )}
             </View>
 
             <View className="flex-row justify-around mb-6">
@@ -202,6 +206,26 @@ const ProfileModal = ({ visible, onClose, profile }) => (
               <Text className="text-[#6f5c91] font-pmedium mb-6">
                 {profile.bio}
               </Text>
+            )}
+
+            {profile.interests && profile.interests.length > 0 && (
+              <View className="mb-6">
+                <Text className="text-[#4a3b6b] font-pbold mb-3">
+                  Interests
+                </Text>
+                <View className="flex-row flex-wrap gap-2">
+                  {profile.interests.map((interest, index) => (
+                    <View
+                      key={index}
+                      className="bg-violet-50 px-3 py-1.5 rounded-full"
+                    >
+                      <Text className="text-violet-600 font-pmedium text-sm">
+                        {interest}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
             )}
           </ScrollView>
         )}
