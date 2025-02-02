@@ -116,6 +116,7 @@ const LoginScreen = () => {
             }
             placeholder="Enter your email"
             keyboardType="email-address"
+            className="py-3.5"
           />
 
           <CustomInput
@@ -126,6 +127,7 @@ const LoginScreen = () => {
             }
             placeholder="Enter your password"
             secureTextEntry
+            className="py-3.5"
           />
 
           <CustomButton

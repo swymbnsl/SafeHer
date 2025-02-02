@@ -10,6 +10,7 @@ const CustomInput = ({
   secureTextEntry = false,
   keyboardType = "default",
   additionalStyle = "",
+  className = "",
 }) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -20,7 +21,7 @@ const CustomInput = ({
       </Text>
       <View className="flex-row items-center bg-gray-50 rounded-xl border border-gray-200">
         <TextInput
-          className={`flex-1 py-3.5 font-pregular px-4`}
+          className={`flex-1 font-pregular px-4 ${className}`}
           placeholder={placeholder}
           value={value}
           onChangeText={onChangeText}

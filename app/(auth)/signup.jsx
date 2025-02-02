@@ -149,6 +149,7 @@ export default function SignUp() {
                 value={inputs.name}
                 onChangeText={(text) => setInputs({ ...inputs, name: text })}
                 placeholder="Enter your full name"
+                className="py-3.5"
               />
 
               <CustomInput
@@ -157,6 +158,7 @@ export default function SignUp() {
                 onChangeText={(text) => setInputs({ ...inputs, email: text })}
                 placeholder="Enter your email"
                 keyboardType="email-address"
+                className="py-3.5"
               />
 
               <CustomInput
@@ -167,6 +169,7 @@ export default function SignUp() {
                 }
                 placeholder="Create a password"
                 secureTextEntry
+                className="py-3.5"
               />
 
               <CustomInput
@@ -177,6 +180,7 @@ export default function SignUp() {
                 }
                 placeholder="Confirm your password"
                 secureTextEntry
+                className="py-3.5"
               />
 
               <CustomButton
