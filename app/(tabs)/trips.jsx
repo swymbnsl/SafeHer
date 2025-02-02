@@ -5,15 +5,10 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Modal,
-  Alert,
   RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/constants/colours";
-import { useRouter, useFocusEffect } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { NotificationPopup } from "./home";
+import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ActiveTripCard from "../../components/ActiveTripCard";
 import FiltersModal from "../../components/FiltersModal";
@@ -38,6 +33,28 @@ const Trips = () => {
     ageRange: "any",
   });
 
+  // Calculate distance between two points
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return 0;
+
+    const R = 6371; // Radius of the earth in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(lat1)) *
+        Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c; // Distance in km
+    return Math.round(d);
+  };
+
+  const deg2rad = (deg) => {
+    return deg * (Math.PI / 180);
+  };
+
   // Fetch trips only once on component mount
   useEffect(() => {
     const loadTrips = async () => {
@@ -47,13 +64,13 @@ const Trips = () => {
 
         // Calculate distance for each trip
         const tripsWithDistance = fetchedTrips.map((trip) => {
-          let distance = 0;
+          let distance = null;
           if (user?.location && trip.location?.coordinates) {
             distance = calculateDistance(
               user.location.latitude,
               user.location.longitude,
-              trip.location.coordinates.latitude,
-              trip.location.coordinates.longitude
+              trip.location.coordinates.lat,
+              trip.location.coordinates.lng
             );
           }
           return { ...trip, distance };
@@ -72,26 +89,6 @@ const Trips = () => {
 
     loadTrips();
   }, [user?.location]);
-
-  // Calculate distance between two points
-  const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // Radius of the earth in km
-    const dLat = deg2rad(lat2 - lat1);
-    const dLon = deg2rad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(deg2rad(lat1)) *
-        Math.cos(deg2rad(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const d = R * c; // Distance in km
-    return Math.round(d);
-  };
-
-  const deg2rad = (deg) => {
-    return deg * (Math.PI / 180);
-  };
 
   // Handle filter changes
   const handleFilterChange = (key, value) => {
@@ -113,39 +110,28 @@ const Trips = () => {
       .filter((trip) => trip.created_by !== user?.id)
       .filter((trip) => {
         // Distance filter
-        const tripDistance =
-          typeof trip.distance === "string"
-            ? parseFloat(trip.distance.replace(/[^\d.]/g, ""))
-            : parseFloat(trip.distance);
+        if (filters.minDistance || filters.maxDistance) {
+          const tripDistance = trip.distance || 0;
+          const minDist = filters.minDistance ? Number(filters.minDistance) : 0;
+          const maxDist = filters.maxDistance
+            ? Number(filters.maxDistance)
+            : Infinity;
 
-        const minDist = filters.minDistance
-          ? parseFloat(filters.minDistance)
-          : 0;
-        const maxDist = filters.maxDistance
-          ? parseFloat(filters.maxDistance)
-          : Infinity;
-
-        // Skip distance filtering if both min and max are empty
-        if (!filters.minDistance && !filters.maxDistance) {
-          // Only apply age filter
-        } else if (
-          isNaN(tripDistance) ||
-          tripDistance < minDist ||
-          tripDistance > maxDist
-        ) {
-          return false;
+          if (tripDistance < minDist || tripDistance > maxDist) {
+            return false;
+          }
         }
 
-        // Age Range filter
+        // Age Range filter (keeping the original working logic)
         if (filters.ageRange !== "any") {
           const posterAge = trip.users?.age;
           if (!posterAge) return false;
 
           if (filters.ageRange === "36+") {
-            if (posterAge < 36) return false;
+            return posterAge >= 36;
           } else {
             const [minAge, maxAge] = filters.ageRange.split("-").map(Number);
-            if (posterAge < minAge || posterAge > maxAge) return false;
+            return posterAge >= minAge && posterAge <= maxAge;
           }
         }
 
@@ -181,13 +167,13 @@ const Trips = () => {
       const fetchedTrips = await getActiveTrips();
       // Calculate distance for each trip
       const tripsWithDistance = fetchedTrips.map((trip) => {
-        let distance = 0;
+        let distance = null;
         if (user?.location && trip.location?.coordinates) {
           distance = calculateDistance(
             user.location.latitude,
             user.location.longitude,
-            trip.location.coordinates.latitude,
-            trip.location.coordinates.longitude
+            trip.location.coordinates.lat,
+            trip.location.coordinates.lng
           );
         }
         return { ...trip, distance };
