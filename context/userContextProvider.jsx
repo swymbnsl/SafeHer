@@ -29,6 +29,7 @@ export const UserProvider = ({ children }) => {
         interests: res.interests,
         friends: res.friends,
         isVerified: res.verified || false,
+        verificationStatus: res.verification_status,
       });
     } catch (error) {
       setUser(undefined);

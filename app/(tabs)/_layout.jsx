@@ -17,8 +17,10 @@ export default function TabLayout() {
     if (!isLoading) {
       if (!user) {
         router.replace("/");
-      } else if (!user.isVerified) {
+      } else if (user.verificationStatus == "unverified") {
         router.replace("/verification");
+      } else if (user.verificationStatus == "pending") {
+        router.replace("/pending-verification");
       }
     }
   }, [isLoading, user]);
