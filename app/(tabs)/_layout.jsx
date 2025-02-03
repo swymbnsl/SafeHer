@@ -11,7 +11,7 @@ import { updateUserLocation } from "@/lib/supabase";
 export default function TabLayout() {
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const router = useRouter();
-  const { user, isLoading, fetchUser } = useUserContext();
+  const { user, isLoading } = useUserContext();
 
   useEffect(() => {
     if (!isLoading) {

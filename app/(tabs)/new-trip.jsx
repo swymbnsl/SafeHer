@@ -39,6 +39,8 @@ const initialTripState = {
 const NewTrip = () => {
   const router = useRouter();
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [tripData, setTripData] = useState(initialTripState);
   const { user } = useUserContext();
 
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
@@ -46,6 +48,7 @@ const NewTrip = () => {
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [error, setError] = useState("");
+  const [toastMessage, setToastMessage] = useState("");
   const [interestInput, setInterestInput] = useState("");
   const [locationSuggestions, setLocationSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -226,9 +229,11 @@ const NewTrip = () => {
   const confirmCreateTrip = async () => {
     try {
       setError("");
-      await createTrip(tripData);
+      const newTrip = await createTrip(tripData);
+
       setShowConfirm(false);
-      Alert.alert("Success", "Trip created successfully!");
+      setToastMessage("Trip created successfully!");
+      setShowToast(true);
 
       // Reset form state
       setTripData(initialTripState);
@@ -565,6 +570,9 @@ const NewTrip = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Toast */}
+      {showToast && Alert.alert(toastMessage)}
     </SafeAreaView>
   );
 };

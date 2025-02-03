@@ -23,35 +23,7 @@ import {
 
 import ActiveTripCard from "../../components/ActiveTripCard";
 import QuickActionButton from "../../components/QuickActionButton";
-import * as TaskManager from "expo-task-manager";
 import * as Location from "expo-location";
-
-// Define the task name constant
-const LOCATION_TRACKING = "background-location-tracking";
-
-// Define the background task
-TaskManager.defineTask(LOCATION_TRACKING, async ({ data, error }) => {
-  if (error) {
-    console.error("Error in background task:", error);
-    return;
-  }
-  if (data) {
-    const { locations } = data;
-    const location = locations[0];
-    if (location) {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (session?.user?.id) {
-          await startLocationSharing(session.user.id, location);
-        }
-      } catch (error) {
-        console.error("Error updating location in background:", error);
-      }
-    }
-  }
-});
 
 const Home = () => {
   const { user, isLoading, fetchUser } = useUserContext();
@@ -134,34 +106,31 @@ const Home = () => {
       }
 
       if (!isSharing) {
-        // Request permissions
-        const { status: foregroundStatus } =
-          await Location.requestForegroundPermissionsAsync();
-        const { status: backgroundStatus } =
-          await Location.requestBackgroundPermissionsAsync();
-
-        if (foregroundStatus !== "granted" || backgroundStatus !== "granted") {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
           throw new Error("Location permission denied");
         }
 
-        // Start background location updates
-        await Location.startLocationUpdatesAsync(LOCATION_TRACKING, {
-          accuracy: Location.Accuracy.Balanced,
-          timeInterval: 10000,
-          distanceInterval: 10,
-          foregroundService: {
-            notificationTitle: "Location Sharing Active",
-            notificationBody: "Your location is being shared",
-          },
+        const stopSharingFn = await startSharingMyLocation();
+        const subscription = startLocationSharing(user.id, (location) => {
+          console.log("Location updated:", location);
+        });
+
+        setLocationInterval(() => {
+          return async () => {
+            subscription.unsubscribe();
+            if (stopSharingFn) {
+              await stopSharingFn();
+            }
+          };
         });
 
         await updateLocationSharingStatus(true);
         setIsSharing(true);
         Alert.alert("Success", "Location sharing started");
       } else {
-        // Stop location updates
-        if (await Location.hasStartedLocationUpdatesAsync(LOCATION_TRACKING)) {
-          await Location.stopLocationUpdatesAsync(LOCATION_TRACKING);
+        if (locationInterval) {
+          await locationInterval();
         }
         await updateLocationSharingStatus(false);
         setIsSharing(false);

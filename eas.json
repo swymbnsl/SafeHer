@@ -14,7 +14,8 @@
     "production": {
       "autoIncrement": true,
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "image": "latest"
       }
     }
   },

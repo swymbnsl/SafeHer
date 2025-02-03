@@ -59,19 +59,22 @@ export default function SignUp() {
       const res = await emailSignUp(inputs.email, inputs.password, inputs.name);
 
       if (res.error) {
-        Alert.alert("Sign Up Error", res.error.cause || "Failed to sign up", [
-          { text: "OK" },
-        ]);
+        const errorMessage =
+          typeof res.error.cause === "string"
+            ? res.error.cause
+            : "Failed to sign up";
+        Alert.alert("Sign Up Error", errorMessage, [{ text: "OK" }]);
         return;
       }
 
       await fetchUser();
     } catch (error) {
-      Alert.alert(
-        "Error",
-        error.cause || "An unexpected error occurred. Please try again.",
-        [{ text: "OK" }]
-      );
+      console.log("error", error.cause);
+      const errorMessage =
+        typeof error.cause === "string"
+          ? error.cause
+          : "An unexpected error occurred. Please try again.";
+      Alert.alert("Error", errorMessage, [{ text: "OK" }]);
     } finally {
       setIsLoading(false);
     }

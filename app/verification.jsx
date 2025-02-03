@@ -94,21 +94,9 @@ const VerificationScreen = () => {
         ...documents,
       });
 
-      Alert.alert(
-        "Verification Submitted",
-        "Your documents have been submitted successfully. We will verify your account within 24 hours and you will receive an email confirmation.",
-        [
-          {
-            text: "OK",
-            onPress: async () => {
-              await signOut();
-              router.replace("/");
-            },
-          },
-        ]
-      );
+      router.replace("/pending-verification");
     } catch (error) {
-      console.log("Submission error:", error);
+      console.log("Submission error:", error.cause);
       Alert.alert(
         "Error",
         "Failed to submit verification documents. Please try again."
